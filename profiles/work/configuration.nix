@@ -28,7 +28,6 @@
     isNormalUser = true;
     description = config.my.user.settings.name;
     extraGroups = [ "wheel" ];
-    uid = 1001;
   };
 
 # Global system packages
