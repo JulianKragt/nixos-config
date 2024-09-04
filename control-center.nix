@@ -9,6 +9,7 @@
     dualBoot = true;
     cpuType = "intel";
     gpuType = "nvidia";
+    displayManager = "ly";
   };
 
   my.user.settings = {
@@ -22,8 +23,9 @@
 
   my.style = {
     windowManager = "hyprland";
-    theme = "";
-    font = "Firacode";
+    theme = "onedark";
+    fonts = [ "FiraCode" "IntelOneMono" "JetBrainsMono" ];
+    font = "IntelOneMono";
   };
 
   my.shell.shells = [ "bash" ];

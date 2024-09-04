@@ -2,6 +2,7 @@
 {
   imports = with config; [
     ../../system/hardware-configuration.nix
+    ../../system/display-manager/ly.nix
     ../../system/hardware/iwd.nix
     ../../system/hardware/time.nix
     ../../system/security/sudo.nix

@@ -31,5 +31,8 @@
     gpuType = lib.mkOption {
       type = lib.types.enum [ "nvidia" "amd" "intel" ];
     };
+    displayManager = lib.mkOption {
+      type = lib.types.enum [ "ly" ];
+    };
   };
 }

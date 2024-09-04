@@ -1,17 +1,14 @@
 {
-
   description = "My first flake";
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, ... } @ inputs:
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nixvim, ... }@inputs:
     let
       system = "x86_64-linux";
       profile = "work";
-
-      pkgs = nixpkgs.legacyPackages.${system};
       pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
     in {
     nixosConfigurations = {
-      system = nixpkgs.lib.nixosSystem {
+      system = nixpkgs-unstable.lib.nixosSystem {
 	system = system;
 	modules = [
 	  ./options
@@ -20,22 +17,22 @@
 	];
 	specialArgs = {
 	  inherit profile;
-	  inherit pkgs-unstable;
 	  inherit inputs;
 	};
       }; 
     };
     homeConfigurations = {
       user = home-manager.lib.homeManagerConfiguration {
-	inherit pkgs;
+        pkgs = pkgs-unstable;
 	modules = [
 	  ./options
 	  ./control-center.nix
+	  inputs.stylix.homeManagerModules.stylix
 	  (./profiles + ("/" + profile) + "/home.nix")
+          nixvim.homeManagerModules.nixvim
 	];
 	extraSpecialArgs = {
 	  inherit profile;
-	  inherit pkgs-unstable;
 	  inherit inputs;
 	};
       };
@@ -44,18 +41,22 @@
 
 
   inputs = {
-    nixpkgs.url = "nixpkgs/nixos-24.05";
     nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
-    home-manager.url = "github:nix-community/home-manager/release-24.05";
-    home-manager.inputs.nixpkgs.follows = "nixpkgs";
+    home-manager.url = "github:nix-community/home-manager";
+    home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
+    stylix.url = "github:danth/stylix";
 
     hyprland = {
       type = "git";
       url = "https://code.hyprland.org/hyprwm/Hyprland.git";
       submodules = true;
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
     };
-
+    nixvim = {
+      url = "github:nix-community/nixvim";
+      # If using a stable channel you can use `url = "github:nix-community/nixvim/nixos-<version>"`
+      inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
   };
 
 }
