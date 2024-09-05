@@ -13,6 +13,7 @@
 	modules = [
 	  ./options
 	  ./control-center.nix
+	  ./pkgs/kragt.nix
 	  (./profiles + ("/" + profile) + "/configuration.nix")
 	];
 	specialArgs = {
