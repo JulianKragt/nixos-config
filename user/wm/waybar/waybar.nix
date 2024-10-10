@@ -11,10 +11,23 @@
         spacing = 2;
 	modules-left = [
 	  "clock"
+	  "hyprland/workspaces"
 	];
 	modules-right = [
+	  "bluetooth"
+	  "wireplumber"
+	  "network"
 	  "battery"
 	];
+
+	bluetooth = {
+	  on-click = "blueman-manager";
+	};
+
+	wireplumber = {
+	  format = "{volume}%";
+	  on-click = "helvum";
+	};
 
 	clock = {
 	  timezone = config.my.system.settings.timezone;
@@ -64,6 +77,28 @@
 	  format = "{icon}  {capacity}%";
 	  format-icons = [ "󰂎" "󰁺" "󰁻" "󰁼" "󰁽" "󰁾" "󰁿" "󰂀" "󰂁" "󰂂" "󰁹" ];
 	};
+	network = {
+	  format-wifi = "{icon}";
+	  format-disconnected = "󰤮";
+	  format-ethernet = "";
+	  tooltip-format-wifi = "{essid} ({signalStrength}%)";
+	  format-icons = [ "󰤯" "󰤟" "󰤢" "󰤥" "󰤨" ];
+	};
+      };
+      "hyprland/workspaces" = {
+      	format = "{icon}";
+      	on-click = "activate";
+      	format-icons = {
+          "1" = "";
+          "2" = "";
+          "3" = "";
+	  "4" = "";
+	  "5" = "";
+	  urgent = "";
+	  active = "";
+	  default = "";
+     	};
+     	sort-by-number = true;
       };
     };
   };

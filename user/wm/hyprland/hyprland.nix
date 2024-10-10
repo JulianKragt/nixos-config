@@ -4,13 +4,18 @@
   wayland.windowManager.hyprland = {
     enable = (config.my.style.windowManager == "hyprland");
     settings = {
-     "$mod" = "SUPER";
+     "$mainMod" = "SUPER";
       monitor = "eDP-1,1920x1080@60,0x0,1";
       bind = [
-        "$mod, Q, exec, kitty"
-        "$mod, T, exec, firefox"
-	"$mod, C, killactive,"
-	"$mod, M, exit,"
+        "$mainMod, Q, exec, kitty"
+        "$mainMod, T, exec, firefox"
+	"$mainMod, C, killactive,"
+	"$mainMod, M, exit,"
+        "$mainMod, 1, workspace, 1"
+        "$mainMod, 2, workspace, 2"
+	"Control_L, Right, workspace, r+1"
+	"Control_L, Left, workspace, r-1"
+	"Control_L, Up, workspace, 1"
       ];
 
       general = {
@@ -22,7 +27,11 @@
 	  scroll_factor = 0.2;
 	};
       };
-      windowrulev2 = "suppressevent maximize, class:.*";
+      windowrulev2 = [
+        "suppressevent maximize, class:.*"
+	# "move 100%-20, class:.blueman-applet-wrapped"
+      ];
+
     };
     extraConfig = ''
       exec-once = waybar

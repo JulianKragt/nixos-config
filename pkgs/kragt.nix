@@ -5,7 +5,7 @@ let
   script = ''
     case "$1" in
       "sync")
-          if ["$#" = 1 ]; then
+          if [ "$#" = 1 ]; then
 	    ''+scriptsDir+''sync.sh;
 	    exit 0;
 	  fi

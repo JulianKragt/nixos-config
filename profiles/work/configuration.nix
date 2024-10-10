@@ -5,6 +5,8 @@
     ../../system/display-manager/ly.nix
     ../../system/hardware/iwd.nix
     ../../system/hardware/time.nix
+    ../../system/hardware/sound.nix
+    ../../system/hardware/bluetooth.nix
     ../../system/security/sudo.nix
     ../../system/security/sshd.nix
     ../../system/wm/hyprland.nix
