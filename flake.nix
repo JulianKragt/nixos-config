@@ -1,7 +1,7 @@
 {
   description = "My first flake";
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nixvim, ... }@inputs:
+  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nixvim, kmonad, ... }@inputs:
     let
       system = "x86_64-linux";
       profile = "work";
@@ -15,6 +15,7 @@
 	  ./control-center.nix
 	  ./pkgs/kragt.nix
 	  (./profiles + ("/" + profile) + "/configuration.nix")
+	  kmonad.nixosModules.default
 	];
 	specialArgs = {
 	  inherit profile;
@@ -57,6 +58,10 @@
       url = "github:nix-community/nixvim";
       # If using a stable channel you can use `url = "github:nix-community/nixvim/nixos-<version>"`
       inputs.nixpkgs.follows = "nixpkgs-unstable";
+    };
+    kmonad = {
+      url = "git+https://github.com/kmonad/kmonad?submodules=1&dir=nix";
+      inputs.nixpkgs.follows = "nixpkgs";
     };
   };
 

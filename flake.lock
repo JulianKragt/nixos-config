@@ -569,6 +569,30 @@
         "type": "github"
       }
     },
+    "kmonad": {
+      "inputs": {
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "dir": "nix",
+        "lastModified": 1729325435,
+        "narHash": "sha256-wfOuEfp4wqfEYAE4zRuILDhjch3i0jKro/1novP5IN8=",
+        "ref": "refs/heads/master",
+        "rev": "7fdccc43e4a7f470f6459754fad6151a570cb04b",
+        "revCount": 871,
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/kmonad/kmonad?dir=nix"
+      },
+      "original": {
+        "dir": "nix",
+        "submodules": true,
+        "type": "git",
+        "url": "https://github.com/kmonad/kmonad?dir=nix"
+      }
+    },
     "nix-darwin": {
       "inputs": {
         "nixpkgs": [
@@ -687,6 +711,7 @@
       "inputs": {
         "home-manager": "home-manager",
         "hyprland": "hyprland",
+        "kmonad": "kmonad",
         "nixpkgs": "nixpkgs",
         "nixpkgs-unstable": "nixpkgs-unstable",
         "nixvim": "nixvim",

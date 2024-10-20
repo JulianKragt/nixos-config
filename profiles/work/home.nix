@@ -6,15 +6,13 @@
 
   imports = [
     ../../user/shell
-    ../../user/wm
-    # ../../user/editor/neovim/neovim.nix
+    ../../user/wm/hyprland.nix
     ../../user/editor/nixvim/nixvim.nix
     ../../user/app/git/git.nix
     ../../user/fonts/fonts.nix
     ../../user/app/terminal/kitty.nix
     ../../user/style/stylix.nix
     ../../user/app/firefox.nix
-    ../../user/wm/waybar/waybar.nix
   ];
 
   home.packages = [

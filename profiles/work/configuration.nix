@@ -10,6 +10,7 @@
     ../../system/security/sudo.nix
     ../../system/security/sshd.nix
     ../../system/wm/hyprland.nix
+    ../../system/hardware/keyboard.nix
   ];
 
 # Boot loader
