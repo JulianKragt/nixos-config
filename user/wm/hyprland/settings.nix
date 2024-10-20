@@ -1,7 +1,4 @@
-
-
-
-{ config, pkgs, lib, ... }:
+{ config, ... }:
 {
   wayland.windowManager.hyprland.settings = {
     monitor = [
