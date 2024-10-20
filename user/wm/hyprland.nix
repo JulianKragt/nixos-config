@@ -3,5 +3,5 @@
   imports = [
     ./hyprland/settings.nix
   ];
-  wayland.windowManager.hyperland.enable = true; 
+  wayland.windowManager.hyprland.enable = true; 
 }

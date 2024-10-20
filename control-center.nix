@@ -15,7 +15,7 @@
   my.user.settings = {
     username = "jkragt";
     name = "Julian Kragt";
-    email = "";
+    email = "email";
     dotfilesDir = "~/.dotfiles";
     terminal = "kitty";
     editor = "neovim";
