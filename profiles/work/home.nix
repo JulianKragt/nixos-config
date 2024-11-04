@@ -12,7 +12,7 @@
     ../../user/fonts/fonts.nix
     ../../user/app/terminal/kitty.nix
     ../../user/style/stylix.nix
-    ../../user/app/firefox.nix
+    ../../user/browser/firefox.nix
   ];
 
   home.packages = [
