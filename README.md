@@ -18,6 +18,7 @@ networking.wireless.iwd.enable = true;
 # add this to create a user
 users.users.[your username] = {
   isNormalUser = true;
+  extraGroups = [ "wheel" ];
 };
 ```
 Install nixos
