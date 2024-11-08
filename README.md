@@ -8,9 +8,12 @@ nix-shell -p git --command "bash install.sh <clone directory>/
 ```
 
 ### From USB install
-**Before** running `nixos-install` add a user to your configuration.nix
+**Before** running `nixos-install` change some settings in you configuration.nix
 ```sql
-# configuration.nix
+# /etc/nixos/configuration.nix
+
+# if needed add wifi service
+networking.wireless.iwd.enable = true;
 
 # add this to create a user
 users.users.[your username] = {
