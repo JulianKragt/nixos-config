@@ -8,17 +8,23 @@ nix-shell -p git --command "bash install.sh <clone directory>/
 ```
 
 ### From USB install
-<font color="red">**Before**</font> running `nixos-install` add a user to your configuration.nix
+**Before** running `nixos-install` add a user to your configuration.nix
 ```bash
 # configuration.nix
 
 # add this to create a user
 users.users.[your username] = {
-  
+  isNormalUser = true;
 };
 ```
-
-Add password to the user
+Install nixos
 ```bash
+nixos-install
+```
+
+Login to user
+```bash
+# first login as root
 passwd [your username]
+exit
 ```
