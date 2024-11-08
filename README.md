@@ -9,7 +9,7 @@ nix-shell -p git --command "bash install.sh <clone directory>/
 
 ### From USB install
 **Before** running `nixos-install` add a user to your configuration.nix
-```bash
+```sql
 # configuration.nix
 
 # add this to create a user
@@ -18,8 +18,10 @@ users.users.[your username] = {
 };
 ```
 Install nixos
-```bash
+```diff
 nixos-install
+! you will be prompted with creating a root password
+reboot
 ```
 
 Login to user
@@ -27,4 +29,6 @@ Login to user
 # first login as root
 passwd [your username]
 exit
+# now you can login as the created user
 ```
+Now you can download the install script and run it see [Install](##Install)
