@@ -10,13 +10,13 @@ nix-shell -p git --command "git clone https://github.com/JulianKragt/nixos-confi
 # Generate hardware config for new system
 sudo nixos-generate-config --show-hardware-config > $CONFIG_DIR/system/hardware-configuration.nix
 
-# Auto fill key values
+# Auto set some key values
 sed -i "0,/username.*=.*\".*\";/ s/username.*=.*\".*\";/username = \"$(whoami)\";/" $CONFIG_DIR/control-center.nix
 sed -i "0,/email.*=.*\".*\";/ s/email.*=.*\".*\";/email = \" \";/" $CONFIG_DIR/control-center.nix
-sed -i "s+~/.dotfiles+$CONFIG_DIR+g" $CONFIG_DIR/flake.nix
+sed -i "s+~/.dotfiles+$CONFIG_DIR+g" $CONFIG_DIR/control-center.nix
 sed -i "0,/profile.*=.*\".*\";/ s/profile.*=.*\".*\";/profile = \"$PROFILE\";/" $CONFIG_DIR/flake.nix
 
-# Open up editor to manually edit flake.nix before install
+# Open up editor to manually edit control-center.nix before install
 if [ -z "$EDITOR" ]; then
     EDITOR=nano;
 fi
