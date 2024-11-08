@@ -10,7 +10,7 @@ nix-shell -p git --command "bash install.sh <clone directory>/
 ### From USB install
 **Before** running `nixos-install` change some settings in you configuration.nix
 ```sql
-# /etc/nixos/configuration.nix
+# /mnt/etc/nixos/configuration.nix
 
 # if needed add wifi service
 networking.wireless.iwd.enable = true;
