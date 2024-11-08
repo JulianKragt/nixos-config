@@ -12,7 +12,7 @@ sudo nixos-generate-config --show-hardware-config > $CONFIG_DIR/system/hardware-
 
 # Auto set some key values
 sed -i "0,/username.*=.*\".*\";/ s/username.*=.*\".*\";/username = \"$(whoami)\";/" $CONFIG_DIR/control-center.nix
-sed -i "0,/email.*=.*\".*\";/ s/email.*=.*\".*\";/email = \" \";/" $CONFIG_DIR/control-center.nix
+sed -i "0,/email.*=.*\".*\";/ s/email.*=.*\".*\";/email = \"<your email>\";/" $CONFIG_DIR/control-center.nix
 sed -i "s+~/.dotfiles+$CONFIG_DIR+g" $CONFIG_DIR/control-center.nix
 sed -i "0,/profile.*=.*\".*\";/ s/profile.*=.*\".*\";/profile = \"$PROFILE\";/" $CONFIG_DIR/flake.nix
 
