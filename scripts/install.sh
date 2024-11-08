@@ -26,4 +26,4 @@ $EDITOR $CONFIG_DIR/control-center.nix;
 nix-shell -p git --command "sudo nixos-rebuild switch --flake $CONFIG_DIR#system"
 
 # Install and build home-manager configuration
-nix run home-manager/master --extra-experimental-features nix-command --extra-experimental-features flakes -- switch --flake $CONFIG_DIR#user
+nix-shell -p git --command "nix run home-manager/master --extra-experimental-features nix-command --extra-experimental-features flakes -- switch --flake $CONFIG_DIR#user"
