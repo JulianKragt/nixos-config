@@ -7,7 +7,7 @@
   imports = [
     ../../user/shell
     ../../user/wm/hyprland.nix
-    ../../user/editor/nixvim/nixvim.nix
+    ../../user/editor/nixvim
     ../../user/app/git/git.nix
     ../../user/fonts/fonts.nix
     ../../user/app/terminal/kitty.nix

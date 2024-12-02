@@ -1,14 +1,14 @@
 {
   description = "My first flake";
 
-  outputs = { self, nixpkgs, nixpkgs-unstable, home-manager, nixvim, kmonad, ... }@inputs:
+  outputs = { self, nixpkgs, home-manager, nixvim, kmonad, ... }@inputs:
     let
       system = "x86_64-linux";
       profile = "work";
-      pkgs-unstable = nixpkgs-unstable.legacyPackages.${system};
+      pkgs = nixpkgs.legacyPackages.${system};
     in {
     nixosConfigurations = {
-      system = nixpkgs-unstable.lib.nixosSystem {
+      system = nixpkgs.lib.nixosSystem {
 	system = system;
 	modules = [
 	  ./options
@@ -25,7 +25,7 @@
     };
     homeConfigurations = {
       user = home-manager.lib.homeManagerConfiguration {
-        pkgs = pkgs-unstable;
+        pkgs = pkgs;
 	modules = [
 	  ./options
 	  ./control-center.nix
@@ -43,7 +43,7 @@
 
 
   inputs = {
-    nixpkgs-unstable.url = "nixpkgs/nixos-unstable";
+    nixpkgs.url = "nixpkgs/nixos-unstable";
     home-manager.url = "github:nix-community/home-manager";
     home-manager.inputs.nixpkgs.follows = "nixpkgs-unstable";
     stylix.url = "github:danth/stylix";

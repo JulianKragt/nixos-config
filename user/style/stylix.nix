@@ -7,10 +7,6 @@ in
   stylix.enable = true;
   stylix.autoEnable = false;
   stylix.base16Scheme = ./. + themePath;
-  stylix.image = pkgs.fetchurl {
-    url = "https://www.pixelstalk.net/wp-content/uploads/2016/05/Epic-Anime-Awesome-Wallpapers.jpg";
-    sha256 = "enQo3wqhgf0FEPHj2coOCvo7DuZv+x5rL/WIo4qPI50=";
-  };
 
   stylix.cursor.size = 20;
 
@@ -25,6 +21,4 @@ in
 
 
   stylix.targets.kitty.enable = true;
-  stylix.targets.nixvim.enable = true;
-
 }
