@@ -5,7 +5,7 @@ CONFIG_DIR=${CONFIG_DIR:-~/.dotfiles}
 read -p "Set profile (work): " PROFILE
 PROFILE=${PROFILE:-work}
 
-nix-shell -p git --command "git clone https://github.com/JulianKragt/nixos-config $CONFIG_DIR"
+nix-shell -p git --command "git clone git@github.com:JulianKragt/nixos-config.git $CONFIG_DIR"
 
 # Generate hardware config for new system
 sudo nixos-generate-config --show-hardware-config > $CONFIG_DIR/system/hardware-configuration.nix
