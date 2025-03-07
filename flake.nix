@@ -9,13 +9,13 @@
         };
     };
 
-    outpusts = {...} @ inputs: let
+    outputs = {...} @ inputs: let
         myLib = import ./lib/default.nix {inherit inputs;};
     in {
-        nixosConfigruations = {
+        nixosConfigurations = {
             laptop = myLib.mkSystem ./hosts/laptop/configuration.nix;
         };
-        homeConfigruations = {
+        homeConfigurations = {
             "jkragt@laptop" = myLib.mkHome "x86_64-linux" ./home/jkragt/home.nix;
         };
 
