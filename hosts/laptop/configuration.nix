@@ -23,5 +23,5 @@
 
     home-manager.extraSpecialArgs = { inherit inputs myLib; };
 
-    system.stateVersion = "25.05";
+    system.stateVersion = "24.11";
 }
