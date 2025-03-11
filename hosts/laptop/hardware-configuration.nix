@@ -14,13 +14,40 @@
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "/dev/disk/by-uuid/f0920359-0d7e-4bb3-8a4a-ec6ac0c6e980";
+    { device = "tmpfs";
+      fsType = "tmpfs";
+    };
+
+  fileSystems."/iso" =
+    { device = "/dev/disk/by-uuid/1A1C-060B";
+      fsType = "vfat";
+      options = [ "fmask=0022" "dmask=0022" ];
+    };
+
+  fileSystems."/nix/.ro-store" =
+    { device = "/iso/nix-store.squashfs";
+      fsType = "squashfs";
+      options = [ "loop" ];
+    };
+
+  fileSystems."/nix/.rw-store" =
+    { device = "tmpfs";
+      fsType = "tmpfs";
+    };
+
+  fileSystems."/nix/store" =
+    { device = "overlay";
+      fsType = "overlay";
+    };
+
+  fileSystems."/mnt" =
+    { device = "/dev/disk/by-uuid/38225521-8c64-428c-b939-27a71425dd7c";
       fsType = "ext4";
     };
 
-  boot.initrd.luks.devices."nixos_crypt".device = "/dev/disk/by-uuid/8d44c6fb-c34c-44c3-b3ea-63a498e901a2";
+  boot.initrd.luks.devices."nixos_crypt".device = "/dev/disk/by-uuid/5529d69f-e582-4d92-bd70-5d042ec5d322";
 
-  fileSystems."/boot" =
+  fileSystems."/mnt/boot" =
     { device = "/dev/disk/by-uuid/5639-FDDF";
       fsType = "vfat";
       options = [ "fmask=0022" "dmask=0022" ];

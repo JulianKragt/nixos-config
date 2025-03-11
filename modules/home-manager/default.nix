@@ -4,14 +4,13 @@
   lib,
   inputs,
   outputs,
-  myLib,
   ...
 }: let
   cfg = config.myHomeManager;
 
   # Taking all modules in ./features and adding enables to them
   features =
-    myLib.extendModules
+    lib.extendModules
     (name: {
       extraOptions = {
         myHomeManager.${name}.enable = lib.mkEnableOption "enable my ${name} configuration";
@@ -19,7 +18,7 @@
 
       configExtension = config: (lib.mkIf cfg.${name}.enable config);
     })
-    (myLib.filesIn ./features);
+    (lib.filesystem.listFilesRecursive ./features);
 
   # Taking all module bundles in ./bundles and adding bundle.enables to them
 #  bundles =

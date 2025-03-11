@@ -1,67 +1,24 @@
-{
-  inputs,
-  lib,
-}: let
-  myLib = (import ./default.nix) {inherit inputs lib;};
-  outputs = inputs.self.outputs;
-in rec {
-  # ================================================================ #
-  # =                            My Lib                            = #
-  # ================================================================ #
+inputs: let
+  lib = inputs.nixpkgs.lib.extend(prev: final: (import ./default.nix inputs) // inputs.home-manager.lib);
+in {
+  mkConfig = (import ./configuration.nix {inherit inputs lib;});  
+   
+  fileNameOf = path: (builtins.head (builtins.split "\\." (builtins.baseNameOf path)));
 
-  # ======================= Package Helpers ======================== #
+  extendModules = extensionFunction: listOfModulePaths:
+    map (modulePath: let
+      moduleFileName = lib.fileNameOf modulePath;
+    in (
+      lib.extendModule((extensionFunction moduleFileName) // {inherit modulePath;}))
+    )
+    listOfModulePaths;
 
-  pkgsFor = sys: inputs.nixpkgs.legacyPackages.${sys};
-
-  # ========================== Buildables ========================== #
-
-  mkSystem = config:
-    inputs.nixpkgs.lib.nixosSystem {
-      specialArgs = {
-        inherit inputs outputs myLib;
-      };
-      modules = [
-        config
-        ./../options
-        outputs.nixosModules.default
-      ];
-    };
-
-  mkHome = sys: config:
-    inputs.home-manager.lib.homeManagerConfiguration {
-      pkgs = pkgsFor sys;
-      extraSpecialArgs = {
-        inherit inputs outputs myLib;
-      };
-      modules = [
-        config
-        ./../options
-        outputs.homeManagerModules.default
-      ];
-    };
-
-  # =========================== Helpers ============================ #
-
-  filesIn = dir:
-   (lib.filesystem.listFilesRecursive dir);
-
-  dirsIn = dir:
-    inputs.nixpkgs.lib.filterAttrs (name: value: value == "directory")
-    (builtins.readDir dir);
-
-  fileNameOf = path: (builtins.head (builtins.split "\\." (baseNameOf path)));
-
-  # ========================== Extenders =========================== #
-
-  # Evaluates nixos/home-manager module and extends it's options / config
-  extendModule = {path, ...} @ args: {pkgs, ...} @ margs: let
-    eval =
-      if (builtins.isString path) || (builtins.isPath path)
-      then import path margs
-      else path margs;
+  extendModule = {modulePath, ... } @ args: { pkgs, ... } @ margs:
+  let
+    eval = import modulePath margs;
     evalNoImports = builtins.removeAttrs eval ["imports" "options"];
-
-    extra =
+    
+    extra = 
       if (builtins.hasAttr "extraOptions" args) || (builtins.hasAttr "extraConfig" args)
       then [
         ({...}: {
@@ -71,28 +28,16 @@ in rec {
       ]
       else [];
   in {
-    imports =
-      (eval.imports or [])
-      ++ extra;
-
+    imports = (eval.imports or []) ++ extra;
+    
     options =
       if builtins.hasAttr "optionsExtension" args
       then (args.optionsExtension (eval.options or {}))
       else (eval.options or {});
 
-    config =
+     config =
       if builtins.hasAttr "configExtension" args
       then (args.configExtension (eval.config or evalNoImports))
-      else (eval.config or evalNoImports);
+      else (eval.config or evalNoImports); 
   };
-
-  # Applies extendModules to all modules
-  # modules can be defined in the same way
-  # as regular imports, or taken from "filesIn"
-  extendModules = extension: modules:
-    map
-    (filePath: let
-      name = fileNameOf filePath;
-    in (extendModule ((extension name) // {path = filePath;})))
-    modules;
 }
