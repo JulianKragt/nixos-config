@@ -1,9 +1,6 @@
 {
-  pkgs,
-  config,
   lib,
-  inputs,
-  outputs,
+  config,
   ...
 }: let
   cfg = config.myHomeManager;

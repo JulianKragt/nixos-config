@@ -1,6 +1,5 @@
 {
     inputs,
-    myLib,
     ...
 }:
 {
@@ -21,8 +20,5 @@
     myNixOS.bundles.connectivity.enable = true;
     myNixOS.systemd-boot.enable = true;
 
-    home-manager.extraSpecialArgs = { inherit inputs myLib; };
-
     system.stateVersion = "25.05";
-#    system.stateVersion = "24.11";
 }
