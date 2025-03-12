@@ -1,5 +1,5 @@
 inputs: let
-  lib = inputs.nixpkgs.lib.extend(prev: final: (import ./default.nix inputs) // inputs.home-manager.lib);
+  lib = inputs.nixpkgs.lib.extend(prev: final: { custom = (import ./default.nix inputs); } // inputs.home-manager.lib);
 in {
   mkConfig = (import ./configuration.nix {inherit inputs lib;});  
    
@@ -7,15 +7,19 @@ in {
 
   extendModules = extensionFunction: listOfModulePaths:
     map (modulePath: let
-      moduleFileName = lib.fileNameOf modulePath;
+      moduleFileName = lib.custom.fileNameOf modulePath;
     in (
-      lib.extendModule((extensionFunction moduleFileName) // {inherit modulePath;}))
+      lib.custom.extendModule((extensionFunction moduleFileName) // {inherit modulePath;}))
     )
     listOfModulePaths;
 
   extendModule = {modulePath, ... } @ args: { pkgs, ... } @ margs:
   let
-    eval = import modulePath margs;
+    eval =
+      if (builtins.isString modulePath) || (builtins.isPath modulePath)
+      then import modulePath margs
+      else modulePath margs;
+
     evalNoImports = builtins.removeAttrs eval ["imports" "options"];
     
     extra = 

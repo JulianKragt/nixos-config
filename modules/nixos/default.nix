@@ -10,7 +10,7 @@
 
   # Taking all modules in ./features and adding enables to them
   features =
-    lib.extendModules
+    lib.custom.extendModules
     (name: {
         extraOptions = {
           myNixOS.${name}.enable = lib.mkEnableOption "enable my ${name} configuration";
@@ -22,7 +22,7 @@
 
   # Taking all module bundles in ./bundles and adding bundle.enables to them
   bundles =
-    lib.extendModules
+    lib.custom.extendModules
     (name: {
       extraOptions = {
         myNixOS.bundles.${name}.enable = lib.mkEnableOption "enable ${name} module bundle";
@@ -34,7 +34,7 @@
 
   # Taking all module services in ./services and adding services.enables to them
   services =
-    lib.extendModules
+    lib.custom.extendModules
     (name: {
       extraOptions = {
         myNixOS.services.${name}.enable = lib.mkEnableOption "enable ${name} service";

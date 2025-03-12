@@ -10,7 +10,7 @@
 
   # Taking all modules in ./features and adding enables to them
   features =
-    lib.extendModules
+    lib.custom.extendModules
     (name: {
       extraOptions = {
         myHomeManager.${name}.enable = lib.mkEnableOption "enable my ${name} configuration";

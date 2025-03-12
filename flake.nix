@@ -12,15 +12,15 @@
     };
 
     outputs = { ... } @ inputs: let
-        lib = inputs.nixpkgs.lib.extend(prev: final: (import ./lib inputs) // inputs.home-manager.lib);
+        lib = inputs.nixpkgs.lib.extend(prev: final: { custom = (import ./lib inputs); } // inputs.home-manager.lib);
     in {
         overlays = import ./overlays {inherit inputs;};
 
         nixosConfigurations = {
-            laptop = lib.mkConfig.nixos ./hosts/laptop/configuration.nix;
+            laptop = lib.custom.mkConfig.nixos ./hosts/laptop/configuration.nix;
         };
         homeConfigurations = {
-            "jkragt@laptop" = lib.mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
+            "jkragt@laptop" = lib.custom.mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
         };
 
        homeManagerModules.default = ./modules/home-manager;

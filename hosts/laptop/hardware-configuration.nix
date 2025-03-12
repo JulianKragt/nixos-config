@@ -8,49 +8,21 @@
     [ (modulesPath + "/installer/scan/not-detected.nix")
     ];
 
-  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usb_storage" "sd_mod" "rtsx_pci_sdmmc" ];
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "rtsx_pci_sdmmc" ];
   boot.initrd.kernelModules = [ ];
   boot.kernelModules = [ "kvm-intel" ];
   boot.extraModulePackages = [ ];
 
   fileSystems."/" =
-    { device = "tmpfs";
-      fsType = "tmpfs";
+    { device = "/dev/disk/by-uuid/9c047daa-74f8-49cf-98f0-b7ed43a9da55";
+      fsType = "ext4";
     };
 
-  fileSystems."/iso" =
-    { device = "/dev/disk/by-uuid/1A1C-060B";
-      fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
-    };
-
-  fileSystems."/nix/.ro-store" =
-    { device = "/iso/nix-store.squashfs";
-      fsType = "squashfs";
-      options = [ "loop" ];
-    };
+  boot.initrd.luks.devices."nixos_crypt".device = "/dev/disk/by-uuid/84303f22-ce2b-4085-8ec4-fe9ade128b01";
 
   fileSystems."/nix/.rw-store" =
     { device = "tmpfs";
       fsType = "tmpfs";
-    };
-
-  fileSystems."/nix/store" =
-    { device = "overlay";
-      fsType = "overlay";
-    };
-
-  fileSystems."/mnt" =
-    { device = "/dev/disk/by-uuid/38225521-8c64-428c-b939-27a71425dd7c";
-      fsType = "ext4";
-    };
-
-  boot.initrd.luks.devices."nixos_crypt".device = "/dev/disk/by-uuid/5529d69f-e582-4d92-bd70-5d042ec5d322";
-
-  fileSystems."/mnt/boot" =
-    { device = "/dev/disk/by-uuid/5639-FDDF";
-      fsType = "vfat";
-      options = [ "fmask=0022" "dmask=0022" ];
     };
 
   swapDevices = [ ];
@@ -60,7 +32,8 @@
   # still possible to use this option, but it's recommended to use it in conjunction
   # with explicit per-interface declarations with `networking.interfaces.<interface>.useDHCP`.
   networking.useDHCP = lib.mkDefault true;
-  # networking.interfaces.wlp59s0.useDHCP = lib.mkDefault true;
+  # networking.interfaces.enp58s0u1u3.useDHCP = lib.mkDefault true;
+  # networking.interfaces.wlan0.useDHCP = lib.mkDefault true;
 
   nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
   hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
