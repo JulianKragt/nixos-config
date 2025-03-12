@@ -16,6 +16,8 @@
             };
         };
     };
+    
+    home-manager.extraSpecialArgs = { inherit inputs; };
    
     myNixOS.bundles.connectivity.enable = true;
     myNixOS.systemd-boot.enable = true;
