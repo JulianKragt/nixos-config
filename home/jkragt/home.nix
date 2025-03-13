@@ -9,7 +9,7 @@
     pkgs.tree
   ];
 
-#  myHomeManager.hyprland.enable = true;
+  myHomeManager.hyprland.enable = true;
 
    programs.git = {
      enable = true;

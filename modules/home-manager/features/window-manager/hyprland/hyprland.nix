@@ -1,12 +1,11 @@
 {
   pkgs,
   inputs,
+  lib,
   ...
 }:
 {
-    wayland.windowManager.hyprland.enable = true;
-    wayland.windowManager.hyprland = {
-        package = inputs.hyprland.packages.${pkgs.stdenv.hostPlatform.system}.hyprland;
-#        portalPackage = inputs.hyprland.packages.${pkg.stdenv.hostPlatform.system}.hyprland;
-    };
+  programs.kitty.enable = true;
+  wayland.windowManager.hyprland.enable = true;
+  myHomeManager.hyprland-settings.enable = lib.mkDefault true;
 }
