@@ -24,10 +24,12 @@
 
     home-manager.extraSpecialArgs = { inherit inputs; };
     nixpkgs.config.allowUnfree = true;
-    hardware.opengl.enable = true;
+    hardware.graphics.enable = true;
    
     myNixOS.bundles.connectivity.enable = true;
     myNixOS.systemd-boot.enable = true;
+    myNixOS.ly.enable = true;
+    myNixOS.hyprland.enable = true;
 
     system.stateVersion = "25.05";
 }

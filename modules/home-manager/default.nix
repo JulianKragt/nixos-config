@@ -18,16 +18,16 @@
     (lib.filesystem.listFilesRecursive ./features);
 
   # Taking all module bundles in ./bundles and adding bundle.enables to them
-#  bundles =
-#    myLib.extendModules
-#    (name: {
-#      extraOptions = {
-#        myHomeManager.bundles.${name}.enable = lib.mkEnableOption "enable ${name} module bundle";
-#      };
-#
-#      configExtension = config: (lib.mkIf cfg.bundles.${name}.enable config);
-#    })
-#    (myLib.filesIn ./bundles);
+  bundles =
+    lib.custom.extendModules
+    (name: {
+      extraOptions = {
+        myHomeManager.bundles.${name}.enable = lib.mkEnableOption "enable ${name} module bundle";
+      };
+
+      configExtension = config: (lib.mkIf cfg.bundles.${name}.enable config);
+    })
+    (lib.filesystem.listFilesRecursive ./bundles);
 
   # Taking all module services in ./services and adding services.enables to them
 #  services =
@@ -43,7 +43,7 @@
 in {
   imports =
     []
-    ++ features;
-#    ++ bundles
+    ++ features
+    ++ bundles;
 #    ++ services;
 }
