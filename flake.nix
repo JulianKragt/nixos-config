@@ -32,7 +32,7 @@
         };
        homeManagerModules.default = ./modules/home-manager;
        nixosModules.default = ./modules/nixos;
-       darwinModules.default = ./modules/darwin;
+       darwinModules.default = ./modules/macos;
     };
 
   nixConfig = {
