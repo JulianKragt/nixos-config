@@ -7,6 +7,10 @@
            url = "github:nix-community/home-manager";
            inputs.nixpkgs.follows = "nixpkgs";
         };
+       darwin = {
+         url = "github:LnL7/nix-darwin/master";
+         inputs.nixpkgs.follows = "nixpkgs";
+       };
        nixos-hardware.url = "github:NixOS/nixos-hardware/master";
        hyprland.url = "github:hyprwm/Hyprland";
     };
@@ -21,10 +25,14 @@
         };
         homeConfigurations = {
             "jkragt@laptop" = lib.custom.mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
+            "jkragt@macos" = lib.custom.mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
         };
-
+        darwinConfigurations = {
+          macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
+        };
        homeManagerModules.default = ./modules/home-manager;
        nixosModules.default = ./modules/nixos;
+       darwinModules.default = ./modules/darwin;
     };
 
   nixConfig = {
