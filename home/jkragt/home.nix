@@ -1,5 +1,6 @@
 {
   pkgs,
+  inputs,
   ...
 }: {
   nixpkgs.config.allowUnfree = true;
@@ -7,6 +8,7 @@
   home.packages = [
     pkgs.neofetch
     pkgs.tree
+    inputs.julvim.packages.${pkgs.system}.default
   ];
 
   myHomeManager.hyprland.enable = true;

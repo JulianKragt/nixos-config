@@ -13,6 +13,7 @@
        };
        nixos-hardware.url = "github:NixOS/nixos-hardware/master";
        hyprland.url = "github:hyprwm/Hyprland";
+       julvim.url = "github:JulianKragt/nixvim";
     };
 
     outputs = { ... } @ inputs: let
@@ -30,6 +31,7 @@
         darwinConfigurations = {
           macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
         };
+
        homeManagerModules.default = ./modules/home-manager;
        nixosModules.default = ./modules/nixos;
        darwinModules.default = ./modules/macos;
@@ -39,10 +41,6 @@
     extra-substituters = [
       "https://nix-community.cachix.org"
       "https://hyprland.cachix.org"
-    ];
-    extra-trusted-public-keys = [
-      "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
-      "hyprland.cachix.org-1:a7pgxzMz7+chwVL3/pzj6jIBMioiJM7ypFP8PwtkuGc="
     ];
   };
 }
