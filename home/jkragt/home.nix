@@ -8,7 +8,7 @@
   home.packages = [
     pkgs.neofetch
     pkgs.tree
-    inputs.julvim.packages.${pkgs.system}.default
+    inputs.nixvim.packages.${pkgs.system}.default
   ];
 
   myHomeManager.hyprland.enable = true;
@@ -22,6 +22,7 @@
   myHomeManager.bundles.desktop-apps.enable = true;
   myHomeManager.kitty.enable = true;
   myHomeManager.fonts.enable = true;   
+  myHomeManager.ags.enable = true;   
 
   # Nicely reload system units when changing configs
 #  systemd.user.startServices = "sd-switch";

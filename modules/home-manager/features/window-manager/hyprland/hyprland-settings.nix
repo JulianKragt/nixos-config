@@ -57,8 +57,12 @@
     input = {
       touchpad = {
         scroll_factor = 0.2;
-	natural_scroll = true;
+        natural_scroll = true;
       };
+    };
+    device = {
+      name = "logitch-gaming-mouse-g502";
+      sensitivity = -0.3;
     };
     windowrulev2 = [
       "suppressevent maximize, class:.*"
