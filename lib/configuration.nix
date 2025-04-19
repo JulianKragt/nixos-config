@@ -5,7 +5,7 @@
 }:
 let
   outputs = inputs.self.outputs;
-in rec {
+in {
   nixos = config:
     inputs.nixpkgs.lib.nixosSystem {
       specialArgs = {

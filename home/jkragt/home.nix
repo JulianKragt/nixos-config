@@ -22,7 +22,6 @@
   myHomeManager.bundles.desktop-apps.enable = true;
   myHomeManager.kitty.enable = true;
   myHomeManager.fonts.enable = true;   
-  myHomeManager.ags.enable = true;   
 
   # Nicely reload system units when changing configs
 #  systemd.user.startServices = "sd-switch";

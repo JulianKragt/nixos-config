@@ -13,6 +13,8 @@ in {
     )
     listOfModulePaths;
 
+  #  listNixFilesRecursive = path: lib.filesystem.listFilesRecursive path |> builtins.filter ()
+
   extendModule = {modulePath, ... } @ args: { pkgs, ... } @ margs:
   let
     eval =
