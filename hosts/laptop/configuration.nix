@@ -1,6 +1,5 @@
 {
   inputs,
-  pkgs,
   ...
 }:
 {
@@ -22,14 +21,12 @@
   hardware.nvidia.powerManagement.enable = false;
   hardware.intelgpu.driver = "xe";
 
-  environment.systemPackages = [ pkgs.hyprland ];
-  environment.pathsToLink = [ "/share/wayland-sessions" ];
-
   home-manager.extraSpecialArgs = { inherit inputs; };
   nixpkgs.config.allowUnfree = true;
   hardware.graphics.enable = true;
 
   myNixOS.bundles.connectivity.enable = true;
+  myNixOS.bundles.window-managers.enable = true;
   myNixOS.systemd-boot.enable = true;
   myNixOS.ly.enable = true;
 

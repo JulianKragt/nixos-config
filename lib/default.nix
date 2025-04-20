@@ -13,7 +13,8 @@ in {
     )
     listOfModulePaths;
 
-  #  listNixFilesRecursive = path: lib.filesystem.listFilesRecursive path |> builtins.filter ()
+  listNixFilesRecursive = path: lib.filesystem.listFilesRecursive path
+    |> builtins.filter (file: lib.hasSuffix ".nix" file);
 
   extendModule = {modulePath, ... } @ args: { pkgs, ... } @ margs:
   let
