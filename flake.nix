@@ -15,7 +15,6 @@
     hyprland.url = "github:hyprwm/Hyprland";
     nixvim.url = "github:JulianKragt/nixvim";
     ags.url = "github:aylur/ags";
-
   };
 
   outputs = { ... } @ inputs: let

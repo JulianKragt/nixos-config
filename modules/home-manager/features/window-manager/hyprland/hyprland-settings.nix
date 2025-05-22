@@ -7,7 +7,7 @@
     ];
     bind = [
       "SUPER, A, exec, kitty"
-      "SUPER, T, exec, firefox"
+      "SUPER, T, exec, firefox-beta"
       "SUPER, Q, killactive,"
       "SUPER, M, exit,"
 

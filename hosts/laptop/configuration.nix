@@ -1,5 +1,6 @@
 {
   inputs,
+  pkgs,
   ...
 }:
 {
@@ -29,6 +30,9 @@
   myNixOS.bundles.window-managers.enable = true;
   myNixOS.systemd-boot.enable = true;
   myNixOS.ly.enable = true;
+  environment.systemPackages = [
+    pkgs.unzip
+  ];
 
   system.stateVersion = "25.05";
 }
