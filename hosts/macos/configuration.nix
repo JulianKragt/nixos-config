@@ -13,7 +13,7 @@
       homeFilePath = ./../../home/jkragt/macos-home.nix;
     };
   };
-  myMacOS.neovim.enable = true;
+  myMacOS.editor.neovim.enable = true;
 
   system.stateVersion = 6;
 }

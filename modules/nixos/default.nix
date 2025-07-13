@@ -2,6 +2,8 @@
   config,
   lib,
   inputs,
+  pkgs,
+  outputs,
   ...
 }: let
   cfg = config.myNixOS;
@@ -16,7 +18,10 @@
 
         configExtension = config: (lib.mkIf cfg.${name}.enable config);
     })
-    (lib.custom.listNixFilesRecursive ./features);
+    (lib.custom.listNixFilesRecursive ./features)
+    {
+      inherit lib config pkgs inputs outputs;
+    };
 
   # Taking all module bundles in ./bundles and adding bundle.enables to them
   bundles =
@@ -28,7 +33,10 @@
 
       configExtension = config: (lib.mkIf cfg.bundles.${name}.enable config);
     })
-    (lib.custom.listNixFilesRecursive ./bundles);
+    (lib.custom.listNixFilesRecursive ./bundles)
+    {
+      inherit lib config pkgs inputs outputs;
+    };
 
   # Taking all module services in ./services and adding services.enables to them
   services =
@@ -40,7 +48,10 @@
 
       configExtension = config: (lib.mkIf cfg.services.${name}.enable config);
     })
-    (lib.custom.listNixFilesRecursive ./services);
+    (lib.custom.listNixFilesRecursive ./services)
+    {
+      inherit lib config pkgs inputs outputs;
+    };
 in {
   imports =
     [

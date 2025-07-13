@@ -1,7 +1,7 @@
 { config, outputs, ... }:
 {
    home-manager.users = builtins.mapAttrs (
-       name: user: {...}: {
+       name: user: {
                imports = [
                    (import user.homeFilePath)
                    outputs.homeManagerModules.default

@@ -1,49 +1,14 @@
+{ config, lib, pkgs, options, attrs, outputs, inputs, ... }:
+
+let
+  loader = lib.custom.module-loader {
+    inherit lib pkgs config options attrs outputs inputs;
+    moduleDir = ./features;
+    group = "myHomeManager";
+    configPath = config.myHomeManager or {};
+  };
+in
 {
-  lib,
-  config,
-  ...
-}: let
-  cfg = config.myHomeManager;
-
-  # Taking all modules in ./features and adding enables to them
-  features =
-    lib.custom.extendModules
-    (name: {
-      extraOptions = {
-        myHomeManager.${name}.enable = lib.mkEnableOption "enable my ${name} configuration";
-      };
-
-      configExtension = config: (lib.mkIf cfg.${name}.enable config);
-    })
-    (lib.custom.listNixFilesRecursive ./features);
-
-  # Taking all module bundles in ./bundles and adding bundle.enables to them
-  bundles =
-    lib.custom.extendModules
-    (name: {
-      extraOptions = {
-        myHomeManager.bundles.${name}.enable = lib.mkEnableOption "enable ${name} module bundle";
-      };
-
-      configExtension = config: (lib.mkIf cfg.bundles.${name}.enable config);
-    })
-    (lib.custom.listNixFilesRecursive ./bundles);
-
-  # Taking all module services in ./services and adding services.enables to them
-#  services =
-#    myLib.extendModules
-#    (name: {
-#      extraOptions = {
-#        myHomeManager.services.${name}.enable = lib.mkEnableOption "enable ${name} service";
-#      };
-#
-#      configExtension = config: (lib.mkIf cfg.services.${name}.enable config);
-#    })
-#    (lib.custom.listNixFilesRecursive ./services);
-in {
-  imports =
-    []
-    ++ features
-    ++ bundles;
-#    ++ services;
+  options = loader.options;
+  imports = loader.modules;
 }

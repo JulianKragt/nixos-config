@@ -3,8 +3,8 @@
   ...
 }:
 {
-  myHomeManager.nushell.enable = true;
-  myHomeManager.firefox.enable = true;
+  # myHomeManager.shell.nushell.enable = true;
+  # myHomeManager.browser.firefox.enable = true;
 
   home.stateVersion = "24.11";
 }

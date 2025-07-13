@@ -3,5 +3,5 @@
   ...
 }:
 {
-  myHomeManager.firefox.enable = lib.mkDefault true;
+  myHomeManager.browser.firefox.enable = lib.mkDefault true;
 }

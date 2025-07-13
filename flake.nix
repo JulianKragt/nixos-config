@@ -18,24 +18,28 @@
   };
 
   outputs = { ... } @ inputs: let
-    lib = inputs.nixpkgs.lib.extend(prev: final: { custom = (import ./lib inputs); } // inputs.home-manager.lib);
+    lib = inputs.nixpkgs.lib.extend (prev: final: {
+      custom = import ./lib { inherit inputs; lib = inputs.nixpkgs.lib; };
+    } // inputs.nixpkgs.lib);
+    mkConfig = (import ./lib/configuration.nix {inherit inputs lib;});
   in {
+    lib = lib;
     overlays = import ./overlays {inherit inputs;};
 
-    nixosConfigurations = {
-      laptop = lib.custom.mkConfig.nixos ./hosts/laptop/configuration.nix;
-    };
+#    nixosConfigurations = {
+#      laptop = mkConfig.nixos ./hosts/laptop/configuration.nix;
+#    };
     homeConfigurations = {
-      "jkragt@laptop" = lib.custom.mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
-      "jkragt@macos" = lib.custom.mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
+      "jkragt@laptop" = mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
+      "jkragt@macos" = mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
     };
     darwinConfigurations = {
-      macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
+      macos = mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
     };
 
-    homeManagerModules.default = ./modules/home-manager;
-    nixosModules.default = ./modules/nixos;
+#    nixosModules.default = ./modules/nixos;
     darwinModules.default = ./modules/macos;
+    homeManagerModules.default = ./modules/home-manager;
   };
 
   nixConfig = {
