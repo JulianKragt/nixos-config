@@ -20,7 +20,7 @@
   outputs = { ... } @ inputs: let
     lib = inputs.nixpkgs.lib.extend (prev: final: {
       custom = import ./lib { inherit inputs; lib = inputs.nixpkgs.lib; };
-    } // inputs.nixpkgs.lib);
+    } // inputs.home-manager.lib);
     mkConfig = (import ./lib/configuration.nix {inherit inputs lib;});
   in {
     lib = lib;
@@ -30,7 +30,7 @@
 #      laptop = mkConfig.nixos ./hosts/laptop/configuration.nix;
 #    };
     homeConfigurations = {
-      "jkragt@laptop" = mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
+#      "jkragt@laptop" = mkConfig.home "x86_64-linux" ./home/jkragt/home.nix;
       "jkragt@macos" = mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
     };
     darwinConfigurations = {

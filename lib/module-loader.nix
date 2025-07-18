@@ -1,45 +1,47 @@
-args@{ lib, pkgs, config, options, attrs, outputs, inputs ? null, moduleDir, group, configPath, ... }:
-
+{ lib, ... }:
 let
-  # List all .nix files recursively
-  nixFiles = builtins.filter (path: lib.strings.hasSuffix ".nix" path)
-    (lib.filesystem.listFilesRecursive moduleDir);
-
-  # Get relative path parts without extension, e.g., ["bundles", "workstation"]
-  pathToKeyParts = path:
+  wrapEnable = rootDir: prefix: file:
     let
-      relPath = lib.strings.removePrefix (toString moduleDir + "/") (toString path);
-      parts = lib.strings.splitString "/" relPath;
+      relPath = lib.removePrefix (toString rootDir + "/") (toString file);
+      parts = lib.splitString "/" relPath;
+      fileName = lib.removeSuffix ".nix" (lib.last parts);
+      pathParts = lib.init parts;
+      nameParts = pathParts ++ [fileName];
+      namespace = prefix ++ nameParts;
+      pathStr = lib.concatStringsSep "." namespace;
     in
-      map (p: lib.strings.removeSuffix ".nix" p) parts;
+      args@{ config, lib, pkgs, inputs, ... }:
+        let
+          subConfig = lib.getAttrFromPath namespace config;
+          mod = import file;
+          body =
+            if builtins.isFunction mod
+            then mod (args // { config = subConfig; })
+            else mod;
 
-  # Fold over all nixFiles to generate nested enable options under 'group'
-  nestedOptions = lib.foldl' (opts: parts:
-    let
-      fullPath = lib.splitString "." group ++ parts;
-      optionName = lib.strings.concatStringsSep "." fullPath;
-      newEntry = lib.attrsets.setAttrByPath fullPath (lib.mkEnableOption ("Enable module " + optionName));
-    in
-      lib.recursiveUpdate opts newEntry
-  ) {} (map pathToKeyParts nixFiles);
+          isModule = builtins.hasAttr "imports" body || builtins.hasAttr "config" body || builtins.hasAttr "options" body;
+          fullModule = if isModule then body else { config = body; };
 
-  # Helper to get enable flag value in configPath by parts
-  getEnable = parts:
-    let
-      attr = lib.attrByPath parts null configPath;
-    in
-      attr != null && attr.enable or false;
+          # Wrap the whole module in a conditional
+          conditionalModule = lib.mkIf (subConfig.enable or false) fullModule;
+        in
+        {
+            options = lib.recursiveUpdate
+              (lib.setAttrByPath (namespace ++ ["enable"]) (lib.mkEnableOption ("Enable " + pathStr + " module")))
+              (conditionalModule.options or {});
 
-  # Pass full `args` to each module (temporarily disable conditional loading)
-  wrappedModules = map (path:
-    let
-      keyParts = pathToKeyParts path;
-      moduleConfig = import path args;
-    in
-      moduleConfig
-  ) nixFiles;
-
-in {
-  options = nestedOptions;
-  modules = wrappedModules;
+            imports = conditionalModule.imports or [];
+            config = conditionalModule.config or {};
+        };
+in
+{
+  wrapModulesByRoots = sprefix: roots:
+      lib.concatMap (info:
+        let
+          path = info.path;
+          prefix = [sprefix] ++ (info.prefix or []);
+          files = lib.filter (f: lib.hasSuffix ".nix" f) (lib.filesystem.listFilesRecursive path);
+        in
+        builtins.map (wrapEnable path prefix) files
+      ) (lib.attrValues roots);
 }

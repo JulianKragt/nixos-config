@@ -1,9 +1,6 @@
-{
-  pkgs,
-  ...
-}:
-{
+{ pkgs, inputs, ... }: {
   environment.systemPackages = [
-    pkgs.neovim
-  ];
+#    inputs.nixvim.packages.${pkgs.system}.default
+    pkgs.tree
+   ];
 }

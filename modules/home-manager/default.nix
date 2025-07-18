@@ -1,14 +1,11 @@
-{ config, lib, pkgs, options, attrs, outputs, inputs, ... }:
-
+{ lib, ... }:
 let
-  loader = lib.custom.module-loader {
-    inherit lib pkgs config options attrs outputs inputs;
-    moduleDir = ./features;
-    group = "myHomeManager";
-    configPath = config.myHomeManager or {};
+  loader = import ../../lib/module-loader.nix { inherit lib; };
+  modulesToImport = loader.wrapModulesByRoots "myHomeManager" {
+    features = { path = ./features; prefix = []; };
+    bundles  = { path = ./bundles;  prefix = ["bundles"]; };
+#    services = { path = ./services; prefix = ["services"]; };
   };
-in
-{
-  options = loader.options;
-  imports = loader.modules;
+in {
+  imports = modulesToImport;
 }

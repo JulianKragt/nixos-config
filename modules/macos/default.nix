@@ -1,17 +1,11 @@
-{ config, lib, pkgs, options, attrs, outputs, inputs, ... }:
-
+{ lib, ... }:
 let
-  loader = lib.custom.module-loader {
-    inherit lib pkgs config options attrs outputs inputs;
-    moduleDir = ./features;
-    group = "myMacOS";
-    configPath = config.myMacOS;
+  loader = import ../../lib/module-loader.nix { inherit lib; };
+  modulesToImport = loader.wrapModulesByRoots "myMacOS" {
+    features = { path = ./features; prefix = []; };
+#    bundles  = { path = ./bundles;  prefix = ["bundles"]; };
+#    services = { path = ./services; prefix = ["services"]; };
   };
-in
-{
-  options = loader.options;
-  imports = loader.modules;
-
-  # Any other config here...
-  config.nix.settings.experimental-features = ["nix-command" "flakes" "pipe-operators"];
+in {
+  imports = modulesToImport;
 }
