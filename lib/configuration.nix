@@ -13,6 +13,7 @@ in {
         config = {
           allowUnfree = true;
         };
+        overlays = import ../overlays { inherit inputs; };
       };
     in
     inputs.darwin.lib.darwinSystem {
@@ -38,10 +39,11 @@ in {
   home = sys: config:
     let
       pkgs = import inputs.nixpkgs {
-        inherit sys;
+        system = sys;
         config = {
           allowUnfree = true;
         };
+        overlays = import ../overlays { inherit inputs; };
       };
     in
     inputs.home-manager.lib.homeManagerConfiguration {

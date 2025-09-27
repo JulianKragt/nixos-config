@@ -42,5 +42,5 @@
   my.hm.terminal.nushell.enable = true;
   my.hm.terminal.ghostty.enable = true;
 
-  home.stateVersion = "25.05";
+  home.stateVersion = "25.11";
 }
