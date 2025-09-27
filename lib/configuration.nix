@@ -10,7 +10,9 @@ in {
     let
       pkgs = import inputs.nixpkgs {
         system = sys;
-        config.allowUnfree = true;
+        config = {
+          allowUnfree = true;
+        };
       };
     in
     inputs.darwin.lib.darwinSystem {
@@ -37,7 +39,9 @@ in {
     let
       pkgs = import inputs.nixpkgs {
         inherit sys;
-        config.allowUnfree = true;
+        config = {
+          allowUnfree = true;
+        };
       };
     in
     inputs.home-manager.lib.homeManagerConfiguration {

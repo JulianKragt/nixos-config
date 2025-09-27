@@ -1,6 +1,7 @@
 {
   pkgs,
   inputs,
+  config,
   ...
 }:
 {
@@ -8,17 +9,12 @@
     # inputs.nixvim.packages.${pkgs.system}.default
     pkgs.tree
     pkgs.neovim
-    pkgs.slack
     pkgs.pnpm
     pkgs.nodejs
   ];
 
   # Use home.file to create direct links to applications in ~/Applications
   # This ensures they appear in Spotlight and Launchpad
-  home.file."Applications/Slack.app" = {
-    source = "${pkgs.slack}/Applications/Slack.app";
-    recursive = true;
-  };
   home.file."Applications/KeePassXC.app" = {
     source = "${pkgs.keepassxc}/Applications/KeePassXC.app";
     recursive = true;
@@ -37,6 +33,14 @@
       SSHAgent.Enabled = true;
     };
   };
+
+  my.hm.obsidian.enable = true;
+  my.hm.slack.enable = true;
+#  my.hm.services.docker.enable = true;
+#  my.hm.qmk.enable = true;
+  my.hm.terminal.starship.enable = true;
+  my.hm.terminal.nushell.enable = true;
+  my.hm.terminal.ghostty.enable = true;
 
   home.stateVersion = "25.05";
 }

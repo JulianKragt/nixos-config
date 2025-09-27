@@ -4,7 +4,7 @@
        name: user: {
                imports = [
                    (import user.homeFilePath)
-                   # outputs.homeManagerModules.default
+                    outputs.homeManagerModules.default
                ];
            })
            (config.myMacOS.home-users);

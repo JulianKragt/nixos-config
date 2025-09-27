@@ -29,6 +29,8 @@
       macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
     };
 
+    homeManagerModules.default = ./modules/home-manager;
+
     nixConfig = {
       experimental-features = [ "nix-command" "flakes" "pipe-operators" ];
       extra-substituters = [
