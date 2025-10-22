@@ -25,11 +25,15 @@ in {
       modules = [
         config
         ./../options
+        outputs.darwinModules.default
         inputs.home-manager.darwinModules.home-manager
         {
           home-manager = {
             useGlobalPkgs = true;
             useUserPackages = true;
+            extraSpecialArgs = {
+              inherit inputs outputs;
+            };
           };
           nix.settings.experimental-features = [ "nix-command" "flakes" "pipe-operators" ];
         }

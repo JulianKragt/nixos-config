@@ -1,4 +1,8 @@
-{ config, outputs, ... }:
+{
+  config,
+  outputs,
+  ...
+}:
 {
    home-manager.users = builtins.mapAttrs (
        name: user: {

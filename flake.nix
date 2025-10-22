@@ -15,7 +15,7 @@
     nixvim.url = "github:JulianKragt/nixvim";
   };
 
-  outputs = { ... } @ inputs: let
+  outputs = {  ... } @ inputs: let
     lib = inputs.nixpkgs.lib.extend (prev: final: {
       custom = import ./lib { inherit inputs; lib = inputs.nixpkgs.lib; };
     });
@@ -29,16 +29,21 @@
       macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
     };
 
+    darwinModules.default = ./modules/macos;
     homeManagerModules.default = ./modules/home-manager;
 
     nixConfig = {
       experimental-features = [ "nix-command" "flakes" "pipe-operators" ];
       extra-substituters = [
         "https://nix-community.cachix.org"
+        "https://devenv.cachix.org"
+
       ];
       extra-trusted-public-keys = [
         "nix-community.cachix.org-1:mB9FSh9qf2dCimDSUo8Zy7bkq5CX+/rkCWyvRCYg3Fs="
+        "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw="
       ];
+      trusted-users = [ "root" "jkragt" ];
     };
   };
 }

@@ -15,12 +15,9 @@
     };
   };
 
-  environment.systemPackages = [
-    pkgs.git
-#    pkgs.jetbrains.phpstorm
-#    inputs.nixvim.packages.${pkgs.system}.default
-  ];
+#  my.mac.php83.enable = true;
 
+  system.primaryUser = "jkragt";
 
   system.stateVersion = 6;
 }

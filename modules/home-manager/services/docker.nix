@@ -11,9 +11,9 @@
     pkgs.colima
   ];
 
-  home.activation.dockerSetup = ''
-    export PATH=${pkgs.docker}/bin:${pkgs.colima}/bin:$HOME/.nix-profile/bin:/usr/bin:/bin:$PATH
-    colima start
-  '';
+#  home.activation.dockerSetup = ''
+#    export PATH=${pkgs.docker}/bin:${pkgs.colima}/bin:$HOME/.nix-profile/bin:/usr/bin:/bin:$PATH
+#    colima start
+#  '';
 
 }
