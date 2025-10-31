@@ -12,6 +12,7 @@
       url = "github:LnL7/nix-darwin/master";
       inputs.nixpkgs.follows = "nixpkgs";
     };
+    nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     nixvim.url = "github:JulianKragt/nixvim";
   };
 
@@ -22,6 +23,10 @@
   in {
     lib = lib;
 
+    nixosConfigurations = {
+      wsl = lib.custom.mkConfig.wsl ./hosts/wsl/configuration.nix;
+    };
+
     homeConfigurations = {
       "jkragt@macos" = lib.custom.mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
     };
@@ -29,6 +34,7 @@
       macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
     };
 
+    nixosModules.default = ./modules/nixos;
     darwinModules.default = ./modules/macos;
     homeManagerModules.default = ./modules/home-manager;
 

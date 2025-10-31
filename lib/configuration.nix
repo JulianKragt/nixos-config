@@ -6,6 +6,21 @@
 let
   outputs = inputs.self.outputs;
 in {
+  wsl = config:
+    inputs.nixpkgs.lib.nixosSystem {
+      specialArgs = {
+        inherit inputs outputs lib;
+      };
+      modules = [
+        inputs.nixos-wsl.nixosModules.default
+        config
+        ./../options
+        outputs.nixosModules.default
+        {
+          wsl.enable = true;
+        }
+      ];
+    };
   darwin = sys: config:
     let
       pkgs = import inputs.nixpkgs {
