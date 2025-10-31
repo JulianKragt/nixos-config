@@ -16,7 +16,7 @@ in {
         inputs.nixos-wsl.nixosModules.default
         config
         ./../options
-        (builtins.path "/etc/nixos/hardware-configuration.nix")
+        (import "/etc/nixos/hardware-configuration.nix")
         outputs.nixosModules.default
         {
           wsl.enable = true;
