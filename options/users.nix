@@ -1,6 +1,6 @@
 { lib, ... }:
 {
-    options.myNixOS.home-users = lib.mkOption {
+    options.my.users = lib.mkOption {
         type = lib.types.attrsOf (lib.types.submodule {
             options = {
                 homeFilePath = lib.mkOption {};
