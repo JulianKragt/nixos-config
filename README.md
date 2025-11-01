@@ -4,7 +4,7 @@ To install with wsl
 - WSL2
 - [NixOS-WSL](https://github.com/nix-community/NixOS-WSL)
 
-#### install
+#### Install
 When you have installed nixos you enter nixos install phase.
 run the folowing command
 ```
@@ -20,3 +20,5 @@ and root password
 sudo -i
 passwd
 ```
+#### Reboot
+after a reboot you have installed nixos on wsl!
