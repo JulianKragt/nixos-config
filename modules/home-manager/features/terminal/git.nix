@@ -10,4 +10,6 @@
       user.email = config.sops.secrets."git/email".path;
     };
   };
+
+  services.ssh-agent.enable = true;
 }
