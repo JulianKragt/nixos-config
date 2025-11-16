@@ -1,0 +1,7 @@
+keys:
+  - &pc-wsl-jk age19xmcclcwdhk2ctfvd37yjhas9dnykmvft6dfpc4r9vme5cdx0aaq9s2c0m
+creation_rules:
+  - path_regex: secrets/secrets.yaml$
+    key_groups:
+      - age:
+          - *pc-wsl-jk

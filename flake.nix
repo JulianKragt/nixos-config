@@ -14,6 +14,7 @@
     };
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     nixvim.url = "github:JulianKragt/nixvim";
+    sops-nix.url = "github:Mic92/sops-nix";
   };
 
   outputs = {  ... } @ inputs: let
@@ -29,6 +30,7 @@
 
     homeConfigurations = {
       "jkragt@macos" = lib.custom.mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
+      "jkragt@wsl" = lib.custom.mkConfig.home "x86_64-linux" ./home/jkragt/wsl-home.nix;
     };
     darwinConfigurations = {
       macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
