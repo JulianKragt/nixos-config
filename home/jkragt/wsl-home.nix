@@ -10,6 +10,7 @@
   ]; 
 
   my.hm.terminal.git.enable = true;
+  my.hm.services.ssh.enable = true;
 
   home.username = "jkragt";
   home.homeDirectory = "/home/jkragt";
