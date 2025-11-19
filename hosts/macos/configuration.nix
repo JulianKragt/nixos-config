@@ -4,15 +4,7 @@
   ...
 }:
 {
-  imports = [
-    ./../../modules/users/users-macos.nix
-  ];
-
-
-  myMacOS.home-users = {
-    "jkragt" = {
-      homeFilePath = ./../../home/jkragt/macos-home.nix;
-    };
+  users.users."jkragt" = {
   };
 
 #  my.mac.php83.enable = true;
