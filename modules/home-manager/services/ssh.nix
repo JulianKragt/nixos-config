@@ -32,9 +32,4 @@ in
   home.sessionVariables = {
     SSH_AUTH_SOCK = "/run/user/${toString uid}/ssh-agent";
   };
-
-
-  # programs.nushell.extraConfig = lib.mkIf config.my.hm.terminal.nushell.enable ''
-    # $env.SSH_AUTH_SOCK = "/run/user/${builtins.getEnv "UID"}/ssh-agent"
-  # '';
 }

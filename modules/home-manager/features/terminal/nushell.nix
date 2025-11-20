@@ -12,7 +12,7 @@
     #
     # If you don't use programs like that, you can just skip
     # this conditional.
-    if ! [ "$TERM" = "xterm-256color" ]; then
+    if [ "$TERM" = "xterm-256color" ]; then
       exec nu
     fi
   '';
