@@ -46,15 +46,11 @@ in {
         config
         ./../options
         outputs.darwinModules.default
-        inputs.home-manager.darwinModules.home-manager
+        inputs.sops-nix.darwinModules.sops
         {
-          home-manager = {
-            useGlobalPkgs = true;
-            useUserPackages = true;
-            extraSpecialArgs = {
-              inherit inputs outputs;
-            };
-          };
+          environment.systemPackages = [
+            inputs.home-manager.packages.x86_64-darwin.home-manager
+          ];
           nix.settings.experimental-features = [ "nix-command" "flakes" "pipe-operators" ];
         }
       ];
