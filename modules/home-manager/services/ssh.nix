@@ -21,7 +21,6 @@ in
       "*" = {
         forwardAgent = false;
         addKeysToAgent = "yes";
-        identityAgent = "/mnt/wslg/runtime-dir/ssh-agent";
         identityFile = "~/.ssh/id_ed25519";
         extraOptions = {
           AddKeysToAgent = "yes";
