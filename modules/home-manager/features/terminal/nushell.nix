@@ -1,18 +1,22 @@
 {
   pkgs,
+  lib,
   ...
 }:
 {
-  programs.nushell.enable = true;
-
-  home.activation.setNuShellShell = ''
-    NU_PATH=${pkgs.nushell}/bin/nu
-
-    if [ "$SHELL" != "$NU_PATH" ]; then
-      if ! grep -q "$NU_PATH" /etc/shells; then
-        /usr/bin/sudo sh -c "echo $NU_PATH >> /etc/shells"
-      fi
-      /usr/bin/sudo /usr/bin/chsh -s "$NU_PATH" "$USER" || true
+  my.hm.terminal.bash.enable = lib.mkDefault true;
+  programs.bash.initExtra = ''
+    # Some programs launch interactive shells and pretend
+    # to use them; such programs always expect a form of POSIX
+    # shell.
+    #
+    # If you don't use programs like that, you can just skip
+    # this conditional.
+    if ! [ "$TERM" = "xterm-256color" ]; then
+      exec nu
     fi
   '';
+  programs.nushell = {
+    enable = true;
+  };
 }
