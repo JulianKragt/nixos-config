@@ -6,7 +6,7 @@
 }:
 {
   home.packages = [
-    inputs.nixvim.packages.${pkgs.system}.default
+    inputs.nixvim.packages.${pkgs.stdenv.hostPlatform.system}.default
     pkgs.tree
     pkgs.pnpm
     pkgs.nodejs
