@@ -22,9 +22,9 @@ in {
       };
       modules = [
         inputs.nixos-wsl.nixosModules.default
-        inputs.sops-nix.nixosModules.sops
         config
         ./../options
+        ./../modules/core/sops/sops-nixos.nix
         outputs.nixosModules.default
         {
           environment.systemPackages = [
@@ -46,7 +46,6 @@ in {
         config
         ./../options
         outputs.darwinModules.default
-        inputs.sops-nix.darwinModules.sops
         {
           environment.systemPackages = [
             inputs.home-manager.packages.x86_64-darwin.home-manager
@@ -65,8 +64,7 @@ in {
       modules = [
         config
         ./../options
-        ./../modules/shared/sops.nix
-        inputs.sops-nix.homeManagerModules.sops
+        ./../modules/core/sops/sops-home.nix
         outputs.homeManagerModules.default
       ];
     };

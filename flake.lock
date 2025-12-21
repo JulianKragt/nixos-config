@@ -127,6 +127,24 @@
         "type": "github"
       }
     },
+    "my-secrets": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1766353806,
+        "narHash": "sha256-fxKzdJgrU7UA3U/4vmseZHsHZCaQ+wNkg/D3r+A15HE=",
+        "ref": "master",
+        "rev": "ecf9fd32fb25a39217bed7799a40c36eb47a456e",
+        "shallow": true,
+        "type": "git",
+        "url": "ssh://git@github.com/JulianKragt/nix-secrets.git"
+      },
+      "original": {
+        "ref": "master",
+        "shallow": true,
+        "type": "git",
+        "url": "ssh://git@github.com/JulianKragt/nix-secrets.git"
+      }
+    },
     "nixos-wsl": {
       "inputs": {
         "flake-compat": "flake-compat",
@@ -312,6 +330,7 @@
       "inputs": {
         "darwin": "darwin",
         "home-manager": "home-manager",
+        "my-secrets": "my-secrets",
         "nixos-wsl": "nixos-wsl",
         "nixpkgs": "nixpkgs_2",
         "nixpkgs-stable": "nixpkgs-stable",

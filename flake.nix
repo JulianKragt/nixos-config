@@ -15,6 +15,10 @@
     nixos-wsl.url = "github:nix-community/NixOS-WSL/main";
     nixvim.url = "github:JulianKragt/nixvim";
     sops-nix.url = "github:Mic92/sops-nix";
+    my-secrets = {
+      url = "git+ssh://git@github.com/JulianKragt/nix-secrets.git?ref=master&shallow=1";
+      flake = false;
+    };
   };
 
   outputs = {  ... } @ inputs: let

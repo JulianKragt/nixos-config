@@ -22,10 +22,10 @@
 #      path = ./apps;
 #      prefix = [ "my" "mac" ];
 #    }
-#    {
-#      path = ./services;
-#      prefix = [ "my" "mac" "services" ];
-#    }
+    {
+      path = ./services;
+      prefix = [ "my" "nix" "services" ];
+    }
     ]
     args;
 }

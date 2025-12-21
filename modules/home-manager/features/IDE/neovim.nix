@@ -4,10 +4,12 @@
   ...
 }:
 {
-  programs.neovim = {
-    enable = true;
-    package = inputs.nixvim.packages.${pkgs.stdenv.hostPlatform.system}.default;
-    vimAlias = true;
-    vimdiffAlias = true;
+  home.packages = [
+    inputs.nixvim.packages.${pkgs.stdenv.hostPlatform.system}.default
+  ];
+
+  home.sessionVariables = {
+    EDITOR = "nvim";
+    VISUAL = "nvim";
   };
 }

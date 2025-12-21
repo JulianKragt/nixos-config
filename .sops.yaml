@@ -1,7 +1,11 @@
 keys:
-  - &pc-wsl-jk age19xmcclcwdhk2ctfvd37yjhas9dnykmvft6dfpc4r9vme5cdx0aaq9s2c0m
+  - &users:
+    - &jkragt age1qk96qw8d85xmrqx0wt8l7wqvdpleqgtvwjjwlgzrvtk29mh8j38s3ssygt
+  - &hosts:
+    - &wsl age176vcm8ug33l3t7vxqq43u3jz4af8pph9p87lmt0def8dj7g3v3ds9ex4um
 creation_rules:
   - path_regex: secrets/secrets.yaml$
     key_groups:
       - age:
-          - *pc-wsl-jk
+          - *jkragt
+          - *wsl

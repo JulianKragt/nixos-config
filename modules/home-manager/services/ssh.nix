@@ -1,6 +1,5 @@
 {
   lib,
-  config,
   pkgs,
   ...
 }:
@@ -25,6 +24,11 @@ in
         extraOptions = {
           AddKeysToAgent = "yes";
         };
+      };
+      "git" = {
+        host = "github.com";
+        identitiesOnly = true;
+        identityFile = "~/.ssh/id_ed25519";
       };
     };
   };
