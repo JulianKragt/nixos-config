@@ -27,8 +27,13 @@ in
       };
       "git" = {
         host = "github.com";
+        forwardAgent = false;
         identitiesOnly = true;
         identityFile = "~/.ssh/id_ed25519";
+        addKeysToAgent = "yes";
+        extraOptions = {
+          AddKeysToAgent = "yes";
+        };
       };
     };
   };
