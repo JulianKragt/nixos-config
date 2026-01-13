@@ -14,13 +14,13 @@
 
   my.nix.services.ssh.enable = true;
 
-  sops.secrets."jkragt-password"= {};
-  sops.secrets."jkragt-password".neededForUsers = true;
+  sops.secrets."jkragt/password"= {};
+  sops.secrets."jkragt/password".neededForUsers = true;
   users.mutableUsers = false;
 
   users.users."jkragt" = {
     isNormalUser = true;
-    hashedPasswordFile = config.sops.secrets."jkragt-password".path;
+    hashedPasswordFile = config.sops.secrets."jkragt/password".path;
     extraGroups = [ "wheel" ];
   };
   wsl.defaultUser = "jkragt";

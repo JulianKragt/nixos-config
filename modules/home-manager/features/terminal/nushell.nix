@@ -18,5 +18,19 @@
   '';
   programs.nushell = {
     enable = true;
+    settings = {
+      buffer_editor = "neovim";
+      edit_mode = "vi";
+      show_banner = false;
+      history = {
+        file_format = "sqlite";
+        max_size = 10000;
+      };
+    };
+
+    shellAliases = {
+      ll = "ls -l";
+      la = "ls -a";
+    };
   };
 }
