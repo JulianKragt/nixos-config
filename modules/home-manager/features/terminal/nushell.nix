@@ -30,6 +30,12 @@
     shellAliases = {
       ll = "ls -l";
       la = "ls -a";
+      gst = "git status";
+      ga = "git add";
+      gl = "git pull";
+      gp = "git push";
+      gc = "git commit";
+      gco = "git checkout";
     };
   };
 }
