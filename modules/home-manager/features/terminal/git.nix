@@ -3,6 +3,12 @@
   ...
 }:
 {
+
+  sops.secrets = {
+    "git/username" = {};
+    "git/email" = {};
+  };
+
   programs.git = {
     enable = true;
 

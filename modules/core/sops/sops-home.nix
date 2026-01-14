@@ -1,11 +1,11 @@
 {
   inputs,
+  config,
   ...
 }:
 {
   imports = [
     inputs.sops-nix.homeManagerModules.sops
-    ./secrets.nix
   ];
 
   sops = {
@@ -17,10 +17,10 @@
 
     secrets = {
       "private_keys/jkragt" = {
-        path = "/home/jkragt/.ssh/id_ed25519";
+        path = config.home.homeDirectory + "/.ssh/id_ed25519";
       };
       "public_keys/jkragt" = {
-        path = "/home/jkragt/.ssh/id_ed25519.pub";
+        path = config.home.homeDirectory + "/.ssh/id_ed25519.pub";
       };
     };
   };

@@ -14,7 +14,6 @@
 
   my.nix.services.ssh.enable = true;
 
-  sops.secrets."jkragt/password"= {};
   sops.secrets."jkragt/password".neededForUsers = true;
   users.mutableUsers = false;
 
