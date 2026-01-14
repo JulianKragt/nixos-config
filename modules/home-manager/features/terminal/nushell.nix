@@ -20,7 +20,6 @@
     enable = true;
     settings = {
       buffer_editor = "neovim";
-      edit_mode = "vi";
       show_banner = false;
       history = {
         file_format = "sqlite";
