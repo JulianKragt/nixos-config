@@ -4,6 +4,7 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     nixpkgs-stable.url = "github:NixOS/nixpkgs/nixos-25.05";
+    nur.url = "github:nix-community/NUR";
     home-manager = {
       url = "github:nix-community/home-manager";
       inputs.nixpkgs.follows = "nixpkgs";
@@ -19,6 +20,11 @@
       url = "git+ssh://git@github.com/JulianKragt/nix-secrets.git?ref=master&shallow=1";
       flake = false;
     };
+    firefox-addons = {
+      url = "gitlab:rycee/nur-expressions?dir=pkgs/firefox-addons";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
   };
 
   outputs = {  ... } @ inputs: let
@@ -33,11 +39,11 @@
     };
 
     homeConfigurations = {
-      "jkragt@macos" = lib.custom.mkConfig.home "x86_64-darwin" ./home/jkragt/macos-home.nix;
+      "jkragt@macos" = lib.custom.mkConfig.home "aarch64-darwin" ./home/jkragt/macos-home.nix;
       "jkragt@wsl" = lib.custom.mkConfig.home "x86_64-linux" ./home/jkragt/wsl-home.nix;
     };
     darwinConfigurations = {
-      macos = lib.custom.mkConfig.darwin "x86_64-darwin" ./hosts/macos/configuration.nix;
+      macos = lib.custom.mkConfig.darwin "aarch64-darwin" ./hosts/macos/configuration.nix;
     };
 
     nixosModules.default = ./modules/nixos;

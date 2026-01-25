@@ -45,10 +45,11 @@ in {
       modules = [
         config
         ./../options
+        ./../modules/core/sops/sops-darwin.nix
         outputs.darwinModules.default
         {
           environment.systemPackages = [
-            inputs.home-manager.packages.x86_64-darwin.home-manager
+            inputs.home-manager.packages.aarch64-darwin.home-manager
           ];
           nix.settings.experimental-features = [ "nix-command" "flakes" "pipe-operators" ];
         }

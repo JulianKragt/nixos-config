@@ -5,12 +5,6 @@
 {
   programs.ghostty = {
     enable = true;
-    package = if pkgs.stdenv.isDarwin then false else pkgs.ghostty;
+    package = pkgs.ghostty-bin;
   };
-#
-#
-#  home.file."Applications/Ghostty.app" = {
-#    source = "${pkgs.ghostty-bin}/Applications/Ghostty.app";
-#    recursive = true;
-#  };
 }

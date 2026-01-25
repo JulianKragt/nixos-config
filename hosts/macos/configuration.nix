@@ -1,4 +1,5 @@
 {
+  config,
   pkgs,
   inputs,
   ...
@@ -7,7 +8,11 @@
   users.users."jkragt" = {
   };
 
-#  my.mac.php83.enable = true;
+  environment.systemPackages = [
+    pkgs.git
+  ];
+
+  my.mac.services.ssh.enable = true;
 
   system.primaryUser = "jkragt";
 

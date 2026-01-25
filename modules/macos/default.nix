@@ -22,10 +22,14 @@
 #      path = ./apps;
 #      prefix = [ "my" "mac" ];
 #    }
-#    {
-#      path = ./services;
-#      prefix = [ "my" "mac" "services" ];
-#    }
+    {
+      path = ./services;
+      prefix = [ "my" "mac" "services" ];
+    }
+    {
+      path = ./homebrew;
+      prefix = [ "my" "mac" "homebrew" ];
+    }
     ]
     args;
 }
