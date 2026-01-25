@@ -4,6 +4,6 @@
 }:
 [
   (self: super: {
-      stable = import inputs.nixpkgs-stable { inherit (super) system; };
+      stable = import inputs.nixpkgs-stable { inherit (super) system; config.allowUnfree = true; };
   })
 ]
