@@ -9,6 +9,7 @@
     inputs.nix-homebrew.darwinModules.nix-homebrew {
       nix-homebrew = {
         enable = true;
+        enableRosetta = true;
         user = "jkragt";
         taps = {
           "homebrew/homebrew-core" = inputs.homebrew-core;
@@ -25,7 +26,7 @@
 
   my.mac.services.ssh.enable = true;
   my.mac.homebrew.onedrive.enable = true;
-  my.mac.homebrew.php.enable = true;
+  my.mac.homebrew.appreo.enable = true;
 
   system.primaryUser = "jkragt";
 
