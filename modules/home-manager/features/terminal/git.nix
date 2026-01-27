@@ -49,8 +49,8 @@
       {
         contents = {
           user = {
-             name  = config.sops.secrets."git/username".path;
-             email = config.sops.secrets."git/email".path;
+             name  = builtins.readFile config.sops.secrets."git/username".path;
+             email = builtins.readFile config.sops.secrets."git/email".path;
           };
           alias = {
             co = "checkout";

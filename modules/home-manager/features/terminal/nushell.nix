@@ -10,6 +10,12 @@
       exec nu
     fi
   '';
+  my.hm.terminal.zsh.enable = lib.mkDefault true;
+  programs.zsh.initContent = ''
+    if [[ -z "$IN_NIX_SHELL" && -z "$NU_VERSION" ]]; then
+      exec nu
+    fi
+  '';
   programs.nushell = {
     enable = true;
     settings = {
