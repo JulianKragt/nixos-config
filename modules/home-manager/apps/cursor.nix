@@ -4,7 +4,6 @@
 }: {
 
   home.packages = [
-    pkgs.slack
+    pkgs.code-cursor
   ];
-
 }

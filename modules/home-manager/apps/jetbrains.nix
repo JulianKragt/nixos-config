@@ -4,7 +4,7 @@
 }: {
 
   home.packages = [
-    pkgs.slack
+    pkgs.jetbrains.phpstorm
   ];
 
 }

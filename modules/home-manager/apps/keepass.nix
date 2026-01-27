@@ -3,11 +3,6 @@
   ...
 }:
 {
-# home.file."Applications/KeePassXC.app" = {
-#   source = "${pkgs.keepassxc}/Applications/KeePassXC.app";
-#   recursive = true;
-# };
-
   programs.keepassxc = {
     enable = true;
     settings = {

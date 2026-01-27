@@ -26,6 +26,10 @@
       path = ./services;
       prefix = [ "my" "hm" "services" ];
     }
+    {
+      path = ./bundles;
+      prefix = [ "my" "hm" "bundles" ];
+    }
     ]
     args;
 }
