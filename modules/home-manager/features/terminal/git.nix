@@ -7,6 +7,8 @@
   sops.secrets = {
     "git/username" = {};
     "git/email" = {};
+    "git/work/username" = {};
+    "git/work/email" = {};
   };
 
   programs.git = {
@@ -69,11 +71,11 @@
       }
 
       {
-        condition = "gitdir:~/work/**";
+        condition = "gitdir:~/projects/appreo/**";
         contents = {
           user = {
-            # name  = config.sops.secrets."git/work/username".path;
-            # email = config.sops.secrets."git/work/email".path;
+             name  = builtins.readFile config.sops.secrets."git/work/username".path;
+             email = builtins.readFile config.sops.secrets."git/work/email".path;
           };
         };
       }

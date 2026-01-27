@@ -27,9 +27,5 @@
 
   home.stateVersion = "25.11";
   home.username = "jkragt";
-   home.homeDirectory =
-    if pkgs.stdenv.isDarwin
-    then "/Users/jkragt"
-    else "/home/jkragt";
-
+  home.homeDirectory = "/Users/jkragt";
 }
