@@ -8,6 +8,7 @@
   my.hm.bundles.workapps.enable = true;
   my.hm.firefox.enable = true;
   my.hm.spotify.enable = true;
+  my.hm.bruno.enable = true;
 #  my.hm.services.docker.enable = true;
 #  my.hm.services.direnv.enable = true;
 #  my.hm.devenv.enable = true;

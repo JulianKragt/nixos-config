@@ -39,6 +39,7 @@
       gco = "git checkout";
 
       surr = "sudo surreal start --bind 127.0.0.1:5432 --log info --user root --pass root rocksdb:///var/lib/surrealdb";
+      a = "php artisan";
     };
   };
 }

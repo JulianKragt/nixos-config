@@ -5,6 +5,7 @@
 {
   system.defaults = {
     dock = {
+      appswitcher-all-displays = true;
       autohide = false;
       expose-animation-duration = 0.3;
       expose-group-apps = true;
@@ -21,6 +22,7 @@
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Spotify.app"; }
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/PhpStorm.app"; }
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Ghostty.app"; }
+        { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Bruno.app"; }
       ];
     };
     finder = {
@@ -45,19 +47,15 @@
     screencapture.target = "clipboard";
     SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
     spaces.spans-displays = false;
-
-
+    NSGlobalDomain."com.apple.swipescrolldirection" = false;
     WindowManager = {
       GloballyEnabled = true;
       EnableStandardClickToShowDesktop = false;
       EnableTiledWindowMargins = false;
     };
   };
-
-
   system.keyboard = {
     enableKeyMapping = true;
     remapCapsLockToEscape = true;
-    swapLeftCtrlAndFn = true;
   };
 }
