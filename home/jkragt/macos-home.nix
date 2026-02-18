@@ -15,8 +15,10 @@
 #  my.hm.PL.php83.enable = true;
 #  my.hm.qmk.enable = true;
 #  my.hm.terminal.starship.enable = true;
-  my.hm.terminal.nushell.enable = true;
+  my.hm.terminal.shell.nushell.enable = true;
   my.hm.terminal.ghostty.enable = true;
+  my.hm.terminal.starship.enable = true;
+  my.hm.terminal.carapace.enable = true;
   my.hm.services.percona.enable = true;
   my.hm.services.memcached.enable = true;
   my.hm.IDE.neovim.enable = true;

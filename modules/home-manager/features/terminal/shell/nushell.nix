@@ -1,11 +1,10 @@
 {
-  config,
   pkgs,
   lib,
   ...
 }:
 {
-  my.hm.terminal.bash.enable = lib.mkDefault true;
+  my.hm.terminal.shell.bash.enable = lib.mkDefault true;
   programs.bash.initExtra = ''
     if [[ -z "$IN_NIX_SHELL" && -z "$NU_VERSION" ]]; then
       exec nu
@@ -36,24 +35,18 @@
       gl = "git pull";
       gp = "git push";
       gc = "git commit";
-      gco = "git checkout";
+      gco = "git switch";
+      gs = "git switch";
 
       surr = "sudo surreal start --bind 127.0.0.1:5432 --log info --user root --pass root rocksdb:///var/lib/surrealdb";
       a = "php artisan";
     };
-    extraConfig = ''
-      def aclear [] {
-        cd ~/projects/appreo/api
-        php artisan cache:clear
-        php artisan cache:clear applicationCache
-      }
-      def watch-appreo [] {
-        print "Starting Desktop watcher..."
-        sh -c "cd ~/projects/appreo/desktop && sencha app watch &"
 
-        print "Starting App watcher on port 1843..."
-        sh -c "cd ~/projects/appreo/app && sencha app watch --port=1843 &"
-      }
-    '';
+    extraConfig = builtins.readFile ./nushell-config.nu;
   };
+
+
+  home.packages = [
+    pkgs.sql-formatter
+  ];
 }

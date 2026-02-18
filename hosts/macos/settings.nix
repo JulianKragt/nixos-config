@@ -47,7 +47,10 @@
     screencapture.target = "clipboard";
     SoftwareUpdate.AutomaticallyInstallMacOSUpdates = true;
     spaces.spans-displays = false;
-    NSGlobalDomain."com.apple.swipescrolldirection" = false;
+    NSGlobalDomain = {
+      "com.apple.swipescrolldirection" = false;
+      ApplePressAndHoldEnabled = false;
+    };
     WindowManager = {
       GloballyEnabled = true;
       EnableStandardClickToShowDesktop = false;
