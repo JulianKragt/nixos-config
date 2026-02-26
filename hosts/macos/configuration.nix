@@ -25,6 +25,7 @@
   homebrew.enable = true;
 
   my.mac.services.ssh.enable = true;
+  my.mac.services.postgres.enable = true;
   my.mac.homebrew.onedrive.enable = true;
   my.mac.homebrew.appreo.enable = true;
 
