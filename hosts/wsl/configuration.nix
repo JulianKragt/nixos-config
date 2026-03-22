@@ -13,7 +13,7 @@
   ];
 
   my.nix.services.ssh.enable = true;
-  my.nix.services.surrealdb.enable = true;
+  my.nix.services.postgres.enable = true;
 
   sops.secrets."jkragt/password".neededForUsers = true;
   users.mutableUsers = false;

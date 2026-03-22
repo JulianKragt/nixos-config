@@ -9,7 +9,7 @@
   ]; 
 
   my.hm.terminal.git.enable = true;
-  my.hm.terminal.nushell.enable = true;
+  my.hm.terminal.shell.nushell.enable = true;
   my.hm.terminal.starship.enable = true;
   my.hm.terminal.direnv.enable = true;
   my.hm.services.ssh.enable = true;

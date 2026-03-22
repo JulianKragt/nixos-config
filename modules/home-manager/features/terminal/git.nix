@@ -1,16 +1,4 @@
 {
-  config,
-  ...
-}:
-{
-
-  sops.secrets = {
-    "git/username" = {};
-    "git/email" = {};
-    "git/work/username" = {};
-    "git/work/email" = {};
-  };
-
   programs.git = {
     enable = true;
 
@@ -51,8 +39,8 @@
       {
         contents = {
           user = {
-             name  = builtins.readFile config.sops.secrets."git/username".path;
-             email = builtins.readFile config.sops.secrets."git/email".path;
+             name  = "JulianKragt";
+             email = "jkragt@outlook.com";
           };
           alias = {
             co = "checkout";
@@ -74,8 +62,8 @@
         condition = "gitdir:~/projects/appreo/**";
         contents = {
           user = {
-             name  = builtins.readFile config.sops.secrets."git/work/username".path;
-             email = builtins.readFile config.sops.secrets."git/work/email".path;
+             name  = "JulianKragt";
+             email = "julian@w3worx.nl";
           };
         };
       }
