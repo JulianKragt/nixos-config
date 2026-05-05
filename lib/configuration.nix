@@ -9,6 +9,7 @@ let
         system = sys;
         config = {
           allowUnfree = true;
+          permittedInsecurePackages = import ./permitted-insecure-packages.nix;
         };
         overlays = import ../overlays { inherit inputs; };
       };

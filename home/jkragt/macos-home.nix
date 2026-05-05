@@ -9,6 +9,7 @@
   my.hm.firefox.enable = true;
   my.hm.spotify.enable = true;
   my.hm.bruno.enable = true;
+  my.hm.beekeeper_studio.enable = true;
 #  my.hm.services.docker.enable = true;
 #  my.hm.services.direnv.enable = true;
 #  my.hm.devenv.enable = true;
@@ -22,6 +23,10 @@
   my.hm.services.percona.enable = true;
   my.hm.services.memcached.enable = true;
   my.hm.IDE.neovim.enable = true;
+
+  programs.zsh.initContent = ''
+    export PATH="/opt/homebrew/bin:$PATH"
+  '';
 
   home.stateVersion = "25.11";
   home.username = "jkragt";
