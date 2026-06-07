@@ -228,10 +228,10 @@
     "nix-secrets": {
       "flake": false,
       "locked": {
-        "lastModified": 1780856655,
-        "narHash": "sha256-/ADcsTQF8SGbnQM3cW8yhHSH/5fiKWtLAf95wTQfqRo=",
+        "lastModified": 1780857241,
+        "narHash": "sha256-dWWr5nUo9i6+IEtg4IeVQiypoTb4YEvR68pGq03S/C8=",
         "ref": "main",
-        "rev": "6a790cffe23c0214a3ca44a6be28763dce742a63",
+        "rev": "013127f5649fc6a05182de52704ec07cf871b34e",
         "shallow": true,
         "type": "git",
         "url": "ssh://git@github.com/JulianKragt/nix-secrets.git"
