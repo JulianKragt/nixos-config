@@ -14,6 +14,13 @@
     ];
   };
 
+  flake.nixosConfigurations.broadway-bootstrap = inputs.nixpkgs.lib.nixosSystem {
+    specialArgs = {
+      inherit inputs self;
+    };
+    modules = [ ./bootstrap.nix ];
+  };
+
   flake.nixosModules.host-broadway =
     { ... }:
     {

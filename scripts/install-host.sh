@@ -1,77 +1,347 @@
 #!/usr/bin/env bash
+# install-host.sh — unattended NixOS install via nixos-anywhere + post-install SOPS enrollment.
+#
+# Usage:
+#   scripts/install-host.sh <host> <ip>              # full flow
+#   scripts/install-host.sh <host> <ip> --enroll-sops
+#   scripts/install-host.sh <host> <ip> --deploy-remote
+#
+# Install policy is read from hosts/nixos/<host>/bootstrap.nix (installSpec module).
+# LUKS passphrase: set DISKO_PASSWORD or enter at prompt (never stored in Nix).
 set -euo pipefail
 
-HOST="$1"
-IP="$2"
+MODE="full"
+HOST=""
+IP=""
 
+usage() {
+  echo "usage: $0 <host> <ip> [--enroll-sops | --deploy-remote]" >&2
+  exit 64
+}
 
-echo "Checking connectivity to $HOST ($IP)..."
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --enroll-sops) MODE="enroll-sops" ;;
+    --deploy-remote) MODE="deploy-remote" ;;
+    -h | --help) usage ;;
+    *)
+      if [[ -z "$HOST" ]]; then
+        HOST="$1"
+      elif [[ -z "$IP" ]]; then
+        IP="$1"
+      else
+        echo "error: unexpected argument: $1" >&2
+        usage
+      fi
+      ;;
+  esac
+  shift
+done
 
-echo
-echo -e "\e[33m===============================================\e[0m"
-echo -e "\e[33mOn the new divice run \`sudo password\` and give a temporary password\e[0m"
-echo -e "\e[33mThis is needed for connecting via SSH\e[0m"
-echo -e "\e[33m===============================================\e[0m"
-echo
+[[ -n "$HOST" && -n "$IP" ]] || usage
 
-if ! ping -c 1 -W 2 "$IP" >/dev/null 2>&1; then
-  echo "ERROR: Host $IP is unreachable."
-  exit 1
-fi
+CONFIG_PATH="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$CONFIG_PATH"
 
-if ! ssh \
-  -o ConnectTimeout=5 \
-  -o StrictHostKeyChecking=no \
-  root@"$IP" 'echo "SSH OK"' >/dev/null 2>&1; then
-  echo "ERROR: SSH connection to root@$IP failed."
-  exit 1
-fi
-
-echo "Connection successful."
-
-
-ssh root@"$IP" '
-set -euo pipefail
-
-fail() {
-  echo "FAIL: $1" >&2
+BOOTSTRAP="hosts/nixos/${HOST}/bootstrap.nix"
+[[ -f "$BOOTSTRAP" ]] || {
+  echo "error: $HOST is not a NixOS host with $BOOTSTRAP" >&2
   exit 1
 }
 
-echo "NIXOS VERSION:"
-test -r /etc/os-release || fail "missing /etc/os-release"
+CFG=".#nixosConfigurations.${HOST}-bootstrap.config"
+SPEC="${CFG}.installSpec"
 
-echo "CHECKING REQUIRED TOOLS:"
+nix_eval_raw() {
+  nix eval --raw "$1"
+}
 
-command -v nix >/dev/null 2>&1 && echo "nix OK" || fail "nix missing"
-command -v lsblk >/dev/null 2>&1 && echo "lsblk OK" || fail "lsblk missing"
-command -v git  >/dev/null 2>&1 && echo "git OK"  || fail "git missing"
+nix_eval_bool() {
+  [[ "$(nix eval --expr "$1" 2>/dev/null)" == "true" ]]
+}
 
-echo "NETWORK:"
-ping -c 1 1.1.1.1 >/dev/null 2>&1 && echo "internet OK" || fail "no internet"
+PRIMARY_USER="$(nix_eval_raw "${SPEC}.primaryUser")"
+GENERATE_HARDWARE="$(nix eval --expr "${SPEC}.generateHardware")"
+ENROLL_SOPS="$(nix eval --expr "${SPEC}.enrollSops")"
+PUSH_SECRETS="$(nix eval --expr "${SPEC}.pushSecrets")"
+DEPLOY_FULL="$(nix eval --expr "${SPEC}.deployFullConfig")"
+SSH_TIMEOUT="$(nix_eval_raw "${SPEC}.sshWaitTimeout")"
+LUKS_FILE="$(nix_eval_raw "${SPEC}.luksPasswordFile")"
+HW_REL="$(nix_eval_raw "${SPEC}.hardwareConfigPath")"
+HW_PATH="hosts/nixos/${HOST}/${HW_REL}"
 
-echo "ALL CHECKS PASSED"
-
-
-echo
-echo "Available disks:"
-lsblk -d -o NAME,SIZE,MODEL,TYPE
-
-echo
-echo -e "\e[33m===============================================\e[0m"
-echo -e "\e[33mUpdate your disko config now if needed.\e[0m"
-echo -e "\e[33mAvailable disks were shown above.\e[0m"
-echo
-echo -e "\e[33mType \`install\` to continue.\e[0m"
-echo -e "\e[33m===============================================\e[0m"
-echo
-
-read -rp "Type \`install\` to continue: " CONFIRM
-
-if [[ "$CONFIRM" != "install" ]]; then
-  echo "Aborted."
-  exit 1
+if nix eval --expr "${SPEC}.nixSecretsPath == null" | grep -q true; then
+  NIX_SECRETS_PATH="$(cd "$CONFIG_PATH/.." && pwd)/nix-secrets"
+else
+  NIX_SECRETS_PATH="$(nix_eval_raw "${SPEC}.nixSecretsPath")"
 fi
 
-'
+SSH_OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=no)
 
+log_ok() { echo "✓ $*"; }
+log_step() { echo; echo "==> $*"; }
+die() { echo "error: $*" >&2; exit 1; }
+
+ssh_target() {
+  ssh "${SSH_OPTS[@]}" "root@${IP}" "$@"
+}
+
+# --- resolve mode overrides ---
+RUN_PREFLIGHT=1
+RUN_INSTALL=0
+RUN_WAIT=0
+RUN_SOPS=0
+RUN_DEPLOY=0
+RUN_VALIDATE=0
+
+case "$MODE" in
+  full)
+    RUN_INSTALL=1
+    RUN_WAIT=1
+    RUN_SOPS=1
+    RUN_DEPLOY=1
+    RUN_VALIDATE=1
+    ;;
+  enroll-sops)
+    RUN_PREFLIGHT=0
+    RUN_WAIT=1
+    RUN_SOPS=1
+    ;;
+  deploy-remote)
+    RUN_PREFLIGHT=0
+    RUN_DEPLOY=1
+    RUN_VALIDATE=1
+    ;;
+esac
+
+nix_eval_bool "$ENROLL_SOPS" || RUN_SOPS=0
+nix_eval_bool "$DEPLOY_FULL" || RUN_DEPLOY=0
+
+# --- Phase 1-2: preflight ---
+if [[ "$RUN_PREFLIGHT" == "1" ]]; then
+  log_step "Preflight"
+
+  [[ -d "$NIX_SECRETS_PATH" ]] || die "nix-secrets not found at $NIX_SECRETS_PATH"
+  git -C "$NIX_SECRETS_PATH" rev-parse >/dev/null 2>&1 || die "nix-secrets is not a git repo: $NIX_SECRETS_PATH"
+
+  DEVICE="$(nix_eval_raw "${CFG}.disko.devices.disk.main.device")"
+  [[ "$DEVICE" != *REPLACE_ME* ]] || die "disko device not configured for $HOST (contains REPLACE_ME)"
+
+  if [[ ! -f "${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml" ]]; then
+    echo "warn: ${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml missing — full deploy may fail"
+  fi
+
+  ssh-keygen -R "$IP" 2>/dev/null || true
+
+  ping -c 1 -W 2 "$IP" >/dev/null || die "host $IP unreachable"
+  log_ok "Installer reachable"
+
+  ssh_target 'echo ok' >/dev/null || die "SSH to root@${IP} failed"
+
+  ssh_target '
+    set -euo pipefail
+    command -v nix >/dev/null || { echo "nix missing" >&2; exit 1; }
+    command -v lsblk >/dev/null || { echo "lsblk missing" >&2; exit 1; }
+    ping -c 1 1.1.1.1 >/dev/null || { echo "no internet" >&2; exit 1; }
+  ' || die "remote environment checks failed"
+  log_ok "Internet reachable"
+
+  ssh_target "test -b '${DEVICE}'" || die "disk device ${DEVICE} not found on installer"
+  log_ok "Disk verified"
+
+  echo
+  echo "Expected install disk: ${DEVICE}"
+  echo
+  ssh_target 'lsblk -d -o NAME,SIZE,MODEL,TYPE'
+  echo
+  read -rp "Type 'install' to continue: " CONFIRM
+  [[ "$CONFIRM" == "install" ]] || die "aborted by user"
+  log_ok "User confirmed"
+
+  if [[ -z "${DISKO_PASSWORD:-}" ]]; then
+    read -rsp "LUKS passphrase for ${HOST}: " DISKO_PASSWORD
+    echo
+  fi
+  printf '%s' "$DISKO_PASSWORD" | ssh "${SSH_OPTS[@]}" "root@${IP}" "cat > '${LUKS_FILE}' && chmod 600 '${LUKS_FILE}'"
+fi
+
+ALREADY_INSTALLED=0
+if ssh_target 'test -f /run/current-system' 2>/dev/null; then
+  ALREADY_INSTALLED=1
+fi
+
+# --- Phase 3: nixos-anywhere ---
+if [[ "$RUN_INSTALL" == "1" && "$ALREADY_INSTALLED" == "0" ]]; then
+  log_step "Installing ${HOST}-bootstrap on ${IP}"
+
+  HW_ARGS=()
+  if nix_eval_bool "$GENERATE_HARDWARE"; then
+    HW_ARGS=(
+      --generate-hardware-config
+      nixos-generate-config
+      "$HW_PATH"
+    )
+  fi
+
+  ANYWHERE_EXTRA=()
+  while IFS= read -r flag; do
+    [[ -n "$flag" ]] && ANYWHERE_EXTRA+=("$flag")
+  done < <(nix eval --json "${SPEC}.nixosAnywhereExtra" | jq -r '.[]?')
+
+  # shellcheck disable=SC2086
+  nix run github:nix-community/nixos-anywhere -- \
+    "${HW_ARGS[@]}" \
+    --flake ".#${HOST}-bootstrap" \
+    --target-host "root@${IP}" \
+    ${ANYWHERE_EXTRA[@]+"${ANYWHERE_EXTRA[@]}"}
+
+  if nix_eval_bool "$GENERATE_HARDWARE" && [[ -n "$(git status --porcelain -- "$HW_PATH")" ]]; then
+    git add -- "$HW_PATH"
+    git commit -m "chore(${HOST}): add generated hardware-configuration.nix"
+  fi
+
+  log_ok "Installation complete"
+  ALREADY_INSTALLED=1
+elif [[ "$RUN_INSTALL" == "1" && "$ALREADY_INSTALLED" == "1" ]]; then
+  log_ok "Installation skipped (system already installed)"
+fi
+
+# --- Phase 4: wait for SSH ---
+if [[ "$RUN_WAIT" == "1" ]]; then
+  log_step "Waiting for first boot"
+
+  ssh-keygen -R "$IP" 2>/dev/null || true
+
+  deadline=$((SECONDS + SSH_TIMEOUT))
+  until ssh "${SSH_OPTS[@]}" "root@${IP}" 'echo ok' 2>/dev/null; do
+    [[ "$SECONDS" -lt "$deadline" ]] || die "SSH timeout after ${SSH_TIMEOUT}s"
+    sleep 5
+  done
+  log_ok "First boot detected"
+fi
+
+# --- Phase 5-7: SOPS enrollment ---
+if [[ "$RUN_SOPS" == "1" ]]; then
+  log_step "Bootstrapping SOPS"
+
+  [[ -d "$NIX_SECRETS_PATH" ]] || die "nix-secrets not found at $NIX_SECRETS_PATH"
+  git -C "$NIX_SECRETS_PATH" rev-parse >/dev/null 2>&1 || die "nix-secrets is not a git repo: $NIX_SECRETS_PATH"
+
+  PUB="$(ssh_target 'cat /etc/ssh/ssh_host_ed25519_key.pub')"
+  RECIPIENT="$(echo "$PUB" | ssh-to-age)"
+  [[ "$RECIPIENT" == age1* ]] || die "ssh-to-age failed: ${RECIPIENT}"
+
+  SOPS_YAML="${NIX_SECRETS_PATH}/.sops.yaml"
+  ANCHOR="host_${HOST}"
+
+  existing_age=""
+  if grep -q "&${ANCHOR}" "$SOPS_YAML"; then
+    existing_age="$(grep "&${ANCHOR}" "$SOPS_YAML" | sed -E 's/.*&'"${ANCHOR}"'[[:space:]]+(age1[^[:space:]]+).*/\1/' | head -1)"
+    if [[ -n "$existing_age" && "$existing_age" != "$RECIPIENT" ]]; then
+      die "SOPS anchor &${ANCHOR} exists with different recipient (${existing_age}). Remove it manually and re-run."
+    fi
+    if [[ "$existing_age" == "$RECIPIENT" ]]; then
+      log_ok "Age recipient already enrolled"
+    fi
+  fi
+
+  if ! grep -q "&${ANCHOR}" "$SOPS_YAML"; then
+    python3 - <<PYEOF
+lines = open("$SOPS_YAML").readlines()
+out, inserted = [], False
+for line in lines:
+    out.append(line)
+    if not inserted and line.rstrip() == "keys:":
+        out.append(f"  - &${ANCHOR} ${RECIPIENT}\n")
+        inserted = True
+if not inserted:
+    raise SystemExit("could not find keys: in .sops.yaml")
+open("$SOPS_YAML", "w").writelines(out)
+PYEOF
+
+    if ! grep -q "hosts/${HOST}.yaml" "$SOPS_YAML"; then
+      cat >>"$SOPS_YAML" <<YAML
+  - path_regex: hosts/${HOST}\\.yaml\$
+    key_groups:
+      - age:
+          - *${ANCHOR}
+YAML
+    fi
+    log_ok "Age recipient generated"
+  fi
+
+  HOST_YAML="${NIX_SECRETS_PATH}/hosts/${HOST}.yaml"
+  if [[ ! -f "$HOST_YAML" ]]; then
+    TEMPLATE="${NIX_SECRETS_PATH}/templates/host.yaml"
+    [[ -f "$TEMPLATE" ]] || die "template not found: $TEMPLATE"
+    mkdir -p "$(dirname "$HOST_YAML")"
+    cp "$TEMPLATE" "$HOST_YAML"
+  fi
+
+  if ! grep -q '^[[:space:]]*sops:' "$HOST_YAML"; then
+    (cd "$NIX_SECRETS_PATH" && sops --encrypt --in-place "hosts/${HOST}.yaml")
+  fi
+
+  NEED_UPDATEKEYS=1
+  if [[ -n "$existing_age" && "$existing_age" == "$RECIPIENT" ]]; then
+    NEED_UPDATEKEYS=0
+  fi
+
+  if [[ "$NEED_UPDATEKEYS" == "1" ]]; then
+    (cd "$NIX_SECRETS_PATH" && sops updatekeys -y "hosts/${HOST}.yaml" "shared.yaml")
+    log_ok "Secrets updated"
+  fi
+
+  (
+    cd "$NIX_SECRETS_PATH"
+    if [[ -n "$(git status --porcelain)" ]]; then
+      git add -A
+      git commit -m "feat(${HOST}): add age recipient"
+      if nix_eval_bool "$PUSH_SECRETS"; then
+        git push || die "git push to nix-secrets failed"
+      fi
+      log_ok "Secrets pushed"
+    fi
+  )
+
+  nix flake update nix-secrets
+  if [[ -n "$(git status --porcelain -- flake.lock)" ]]; then
+    git add flake.lock
+    git commit -m "chore: update nix-secrets flake lock for ${HOST}"
+  fi
+fi
+
+# --- Phase 8: full deploy ---
+if [[ "$RUN_DEPLOY" == "1" ]]; then
+  log_step "Deploying full configuration"
+
+  if [[ ! -f "${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml" ]]; then
+    echo "warn: users/${PRIMARY_USER}.yaml missing in nix-secrets — deploy will likely fail"
+  fi
+
+  nixos-rebuild switch \
+    --flake ".#${HOST}" \
+    --target-host "root@${IP}" \
+    --show-trace
+
+  log_ok "Deployment complete"
+fi
+
+# --- Phase 9: validation ---
+if [[ "$RUN_VALIDATE" == "1" ]]; then
+  log_step "Validation"
+
+  ssh_target '
+    set -euo pipefail
+    echo "Failed units:"
+    systemctl --failed --no-legend || true
+    systemctl is-active sops-nix
+    test -f /var/lib/sops-nix/key.txt
+    echo "nixos-version: $(nixos-version)"
+  '
+
+  log_ok "Validation complete"
+fi
+
+echo
+echo "Done."

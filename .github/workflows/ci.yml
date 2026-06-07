@@ -49,7 +49,11 @@ jobs:
         include:
           - config: nixosConfigurations.broadway.config.system.build.toplevel
             runner: ubuntu-24.04
+          - config: nixosConfigurations.broadway-bootstrap.config.system.build.toplevel
+            runner: ubuntu-24.04
           - config: nixosConfigurations.atlas.config.system.build.toplevel
+            runner: ubuntu-24.04
+          - config: nixosConfigurations.atlas-bootstrap.config.system.build.toplevel
             runner: ubuntu-24.04
           - config: darwinConfigurations.workhorse.config.system.build.toplevel
             runner: macos-15

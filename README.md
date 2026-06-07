@@ -19,7 +19,8 @@ config/
 │   ├── default.nix    # flake-parts module → `flake.lib.custom`
 │   └── helpers.nix    # helper functions (`inputs`, `lib`)
 ├── modules/           # custom modules: each declares options + (optionally) implementation
-│   └── host-spec.nix
+│   ├── host-spec.nix
+│   └── install-spec.nix
 ├── hosts/
 │   ├── common/{core,optional,users}/
 │   ├── nixos/<host>/
@@ -74,24 +75,45 @@ just              # list recipes
 just check        # nix flake check
 just rebuild      # rebuild current host (auto-detects darwin/linux)
 just rebuild HOST # rebuild a specific host
-just install HOST IP # provision a fresh NixOS box via nixos-anywhere
-just users HOST   # list users wired onto a host (filesystem-derived)
-just secrets-edit hosts/HOST.yaml
-just secrets-edit users/USER.yaml   # NixOS password hash (see ../nix-secrets README)
-just secrets-rekey
+just install HOST IP       # full NixOS install (nixos-anywhere + SOPS + deploy)
+just enroll-sops HOST IP   # SOPS enrollment only (recovery)
+just deploy-remote HOST IP # remote full-config deploy only (recovery)
+just users HOST            # list users wired onto a host (filesystem-derived)
 ```
+
+Secrets editing and re-keying live in the sibling `../nix-secrets` repo (`just edit`, `just rekey` there).
 
 ## Onboarding a new host
 
 See §6 of the architecture plan. Short version:
 
-1. Create `hosts/<platform>/<host>/{default,host-spec}.nix` (and `disko.nix` +
-   `hardware-configuration.nix` for NixOS).
+1. Create `hosts/<platform>/<host>/{default,host-spec}.nix` (and for NixOS:
+   `disko.nix`, stub `hardware-configuration.nix`, and `bootstrap.nix` with
+   `installSpec`).
 2. Add the host’s flake fragments to [`imports.nix`](imports.nix) if you add new `.nix` files under `hosts/` or `home/` that export flake modules.
 3. For each user that should live on the host, create `home/<user>/<host>.nix`
    exporting `flake.homeModules.<user>-<host>`. Existence is the activation
    switch.
-4. NixOS: `just install <host> <ip>`. Darwin: `just rebuild <host>`.
+4. NixOS: set the real disk device in `disko.nix`, then `just install <host> <ip>`.
+   Darwin: `just rebuild <host>`.
+
+### NixOS install (`installSpec`)
+
+Install policy is declared in `hosts/nixos/<host>/bootstrap.nix` via
+[`modules/install-spec.nix`](modules/install-spec.nix) (`installSpec` options).
+Bootstrap is intentionally minimal: disko, openssh, systemd-boot, and **root**
+SSH access (keys from `primaryUser` + super). No Home Manager, SOPS, or normal
+users until the full deploy. The install script reads `installSpec` with
+`nix eval`. LUKS passphrase is prompted at install time (or `DISKO_PASSWORD`).
+
+| Option | Default | Meaning |
+|--------|---------|---------|
+| `generateHardware` | `true` | nixos-anywhere writes `hardware-configuration.nix` |
+| `enrollSops` | `true` | Post-install SOPS enrollment in `../nix-secrets` |
+| `pushSecrets` | `true` | Push nix-secrets git commits |
+| `deployFullConfig` | `true` | Remote `nixos-rebuild switch` with full flake output |
+| `nixSecretsPath` | `null` | Sibling `../nix-secrets` when null |
+| `sshWaitTimeout` | `600` | Seconds to wait for SSH after reboot |
 
 ## Onboarding a new user
 

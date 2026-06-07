@@ -42,9 +42,17 @@ rebuild host=`hostname -s`:
       sudo nixos-rebuild switch --flake ".#$host"
     fi
 
-# Provision a fresh NixOS host via nixos-anywhere + sops bootstrap.
+# Provision a fresh NixOS host (Linux only; reads installSpec from bootstrap.nix).
 install host ip:
     bash scripts/install-host.sh {{host}} {{ip}}
+
+# SOPS enrollment only (Phases 5-7).
+enroll-sops host ip:
+    bash scripts/install-host.sh {{host}} {{ip}} --enroll-sops
+
+# Full config remote deploy only (Phase 8).
+deploy-remote host ip:
+    bash scripts/install-host.sh {{host}} {{ip}} --deploy-remote
 
 # Update one or more flake inputs (no args = update everything).
 update *inputs:

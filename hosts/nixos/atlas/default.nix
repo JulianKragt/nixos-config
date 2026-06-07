@@ -14,6 +14,13 @@
     ];
   };
 
+  flake.nixosConfigurations.atlas-bootstrap = inputs.nixpkgs.lib.nixosSystem {
+    specialArgs = {
+      inherit inputs self;
+    };
+    modules = [ ./bootstrap.nix ];
+  };
+
   flake.nixosModules.host-atlas =
     { ... }:
     {
