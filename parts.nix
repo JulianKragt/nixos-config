@@ -45,6 +45,8 @@
           ssh-to-age
           yq-go
           python3
+          gum
+          tmux
         ];
 
         shellHook = ''

@@ -10,6 +10,42 @@
 # LUKS passphrase: set DISKO_PASSWORD or enter at prompt (never stored in Nix).
 set -euo pipefail
 
+clear
+
+confirm() {
+  local prompt="${1:-Are you sure?}"
+  read -r -p "$prompt [y/N]: "
+  [[ "$reply" =~ ^[Yy]$ ]]
+}
+
+edit() {
+  local file="$1"
+  "${EDITOR:-vi}" "$file"
+}
+
+log_ok() { echo -e "\e[32m✓ $*"; echo -e "\e[0m"; }
+log_step() { echo; echo -e "\e[32m==> $*"; echo -e "\e[0m"; }
+die() { echo -e "\e[31merror: $*\e[0m" >&2; exit 1; }
+log_action() {
+  echo -e "\e[33m========================================================================"
+  echo -e "$*"
+  echo -e "========================================================================\e[0m";
+}
+log_info() { echo -e "\e[33m$*\e[0m"; }
+
+log_confirm() {
+  echo -e "\e[33m========================================================================"
+  echo -e "$1"
+  echo -e "========================================================================\e[0m";
+  if confirm $2; then
+    echo -e "\e[32mProceeding\e[0m";
+  else
+    echo -e "\e[32mCanceling\e[0m";
+    echo -e "\e[32mCanceling\e[0m";
+    exit 1;
+  fi
+  }
+
 MODE="full"
 HOST=""
 IP=""
@@ -38,6 +74,8 @@ while [[ $# -gt 0 ]]; do
   shift
 done
 
+log_step "Configuration"
+
 [[ -n "$HOST" && -n "$IP" ]] || usage
 
 CONFIG_PATH="$(cd "$(dirname "$0")/.." && pwd)"
@@ -49,7 +87,7 @@ BOOTSTRAP="hosts/nixos/${HOST}/bootstrap.nix"
   exit 1
 }
 
-CFG=".#nixosConfigurations.${HOST}-bootstrap.config"
+CFG="#nixosConfigurations.${HOST}-bootstrap.config"
 SPEC="${CFG}.installSpec"
 
 nix_eval_raw() {
@@ -60,27 +98,113 @@ nix_eval_bool() {
   [[ "$(nix eval --expr "$1" 2>/dev/null)" == "true" ]]
 }
 
-PRIMARY_USER="$(nix_eval_raw "${SPEC}.primaryUser")"
-GENERATE_HARDWARE="$(nix eval --expr "${SPEC}.generateHardware")"
-ENROLL_SOPS="$(nix eval --expr "${SPEC}.enrollSops")"
-PUSH_SECRETS="$(nix eval --expr "${SPEC}.pushSecrets")"
-DEPLOY_FULL="$(nix eval --expr "${SPEC}.deployFullConfig")"
-SSH_TIMEOUT="$(nix_eval_raw "${SPEC}.sshWaitTimeout")"
-LUKS_FILE="$(nix_eval_raw "${SPEC}.luksPasswordFile")"
-HW_REL="$(nix_eval_raw "${SPEC}.hardwareConfigPath")"
-HW_PATH="hosts/nixos/${HOST}/${HW_REL}"
+eval_spec() {
+  nix eval --json "${SPEC}" \
+    --apply 'x: {
+      PRIMARY_USER = x.primaryUser;
+      GENERATE_HARDWARE = x.generateHardware;
+      ENROLL_SOPS = x.enrollSops;
+      PUSH_SECRETS = x.pushSecrets;
+      DEPLOY_FULL = x.deployFullConfig;
+      SSH_TIMEOUT = x.sshWaitTimeout;
+      LUKS_FILE = x.luksPasswordFile;
+      HW_REL = x.hardwareConfigPath;
+      NIX_SECRETS_PATH = x.nixSecretsPath;
+    }'
+}
 
-if nix eval --expr "${SPEC}.nixSecretsPath == null" | grep -q true; then
-  NIX_SECRETS_PATH="$(cd "$CONFIG_PATH/.." && pwd)/nix-secrets"
-else
-  NIX_SECRETS_PATH="$(nix_eval_raw "${SPEC}.nixSecretsPath")"
-fi
+
+CONFIG_JSON="$(eval_spec)"
+
+while true; do
+  echo -e "\e[33mCurrent config:\e[0m"
+  echo "$CONFIG_JSON" | jq
+
+  read -r -p $'\e[33mEdit config?\e[0m [e=edit/n]: ' reply
+
+  case "$reply" in
+    [Ee])
+      "${EDITOR:-vi}" "$BOOTSTRAP"
+
+      NEW_JSON="$(eval_spec)"
+
+      echo -e "\e[33mDiff:\e[0m"
+      jq -r --argjson old "$CONFIG_JSON" --argjson new "$NEW_JSON" -n '
+        def red:   "\u001b[31m";
+        def green: "\u001b[32m";
+        def bold:  "\u001b[1m";
+        def reset: "\u001b[0m";
+
+        ($old + $new | keys_unsorted[]) as $k
+        | select($old[$k] != $new[$k])
+        | "\(bold)\($k)\(reset): \(red)\($old[$k])\(reset) → \(green)\($new[$k])\(reset)"
+      '
+
+      CONFIG_JSON="$NEW_JSON"
+      continue
+      ;;
+
+    [Nn])
+      break
+      ;;
+
+    *)
+      echo "exit"
+      exit 1
+      ;;
+  esac
+done
+
+
+PRIMARY_USER="$(jq -r '.PRIMARY_USER' <<< "$CONFIG_JSON")"
+GENERATE_HARDWARE="$(jq -r '.GENERATE_HARDWARE' <<< "$CONFIG_JSON")"
+ENROLL_SOPS="$(jq -r '.ENROLL_SOPS' <<< "$CONFIG_JSON")"
+PUSH_SECRETS="$(jq -r '.PUSH_SECRETS' <<< "$CONFIG_JSON")"
+DEPLOY_FULL="$(jq -r '.DEPLOY_FULL' <<< "$CONFIG_JSON")"
+SSH_TIMEOUT="$(jq -r '.SSH_TIMEOUT' <<< "$CONFIG_JSON")"
+LUKS_FILE="$(jq -r '.LUKS_FILE' <<< "$CONFIG_JSON")"
+HW_REL="$(jq -r '.HW_REL' <<< "$CONFIG_JSON")"
+HW_PATH="hosts/nixos/${HOST}/${HW_REL}"
+NIX_SECRETS_PATH="$(jq -r '.NIX_SECRETS_PATH' <<< "$CONFIG_JSON")"
+
+SOPS_YAML="${NIX_SECRETS_PATH}/.sops.yaml"
+ANCHOR="host_${HOST}"
+
 
 SSH_OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=no)
 
-log_ok() { echo "✓ $*"; }
-log_step() { echo; echo "==> $*"; }
-die() { echo "error: $*" >&2; exit 1; }
+if grep -q "&${ANCHOR}" "$SOPS_YAML"; then
+  log_action "\e[31m
+  error: There is an SOPS age key set for this host in .sops.yaml
+  Adviced to delete.
+  \e[0m \e[33" 
+
+  read -r -p $'\e[33m Auto delete/Edit/Ignore?\e[0m [d=delete/e=edit/i=ignore]: ' reply
+
+  case "$reply" in
+    [Ee])
+      "${EDITOR:-vi}" "$SOPS_YAML"
+      ;;
+
+    [Dd])
+      rm -f "${NIX_SECRETS_PATH}/hosts/${HOST}.yaml"
+      sed -i "\|&${ANCHOR}|d" "$SOPS_YAML"
+      ;;
+    [Ii])
+      log_ok "ignored"
+      ;;
+
+    *)
+      echo "exit"
+      exit 1
+      ;;
+  esac
+fi
+
+log_action "There are a few setup commands that need to be run manually:
+  1: \`sudo passwd\`
+    For setting up a temporary root password
+    This is needed to be able to SSH into the new device."
 
 ssh_target() {
   ssh "${SSH_OPTS[@]}" "root@${IP}" "$@"
@@ -158,10 +282,27 @@ if [[ "$RUN_PREFLIGHT" == "1" ]]; then
   [[ "$CONFIRM" == "install" ]] || die "aborted by user"
   log_ok "User confirmed"
 
-  if [[ -z "${DISKO_PASSWORD:-}" ]]; then
-    read -rsp "LUKS passphrase for ${HOST}: " DISKO_PASSWORD
+if [[ -z "${DISKO_PASSWORD:-}" ]]; then
+  while true; do
+    read -rsp "LUKS passphrase for ${HOST}: " p1
     echo
-  fi
+    read -rsp "Confirm LUKS passphrase for ${HOST}: " p2
+    echo
+
+    if [[ -z "$p1" ]]; then
+      echo "Password cannot be empty"
+      continue
+    fi
+
+    if [[ "$p1" != "$p2" ]]; then
+      echo "Passwords do not match, try again"
+      continue
+    fi
+
+    DISKO_PASSWORD="$p1"
+    break
+  done
+fi
   printf '%s' "$DISKO_PASSWORD" | ssh "${SSH_OPTS[@]}" "root@${IP}" "cat > '${LUKS_FILE}' && chmod 600 '${LUKS_FILE}'"
 fi
 
@@ -191,6 +332,7 @@ if [[ "$RUN_INSTALL" == "1" && "$ALREADY_INSTALLED" == "0" ]]; then
   # shellcheck disable=SC2086
   nix run github:nix-community/nixos-anywhere -- \
     "${HW_ARGS[@]}" \
+    --build-on-remote \
     --flake ".#${HOST}-bootstrap" \
     --target-host "root@${IP}" \
     ${ANYWHERE_EXTRA[@]+"${ANYWHERE_EXTRA[@]}"}
@@ -230,9 +372,6 @@ if [[ "$RUN_SOPS" == "1" ]]; then
   PUB="$(ssh_target 'cat /etc/ssh/ssh_host_ed25519_key.pub')"
   RECIPIENT="$(echo "$PUB" | ssh-to-age)"
   [[ "$RECIPIENT" == age1* ]] || die "ssh-to-age failed: ${RECIPIENT}"
-
-  SOPS_YAML="${NIX_SECRETS_PATH}/.sops.yaml"
-  ANCHOR="host_${HOST}"
 
   existing_age=""
   if grep -q "&${ANCHOR}" "$SOPS_YAML"; then
@@ -319,10 +458,11 @@ if [[ "$RUN_DEPLOY" == "1" ]]; then
     echo "warn: users/${PRIMARY_USER}.yaml missing in nix-secrets — deploy will likely fail"
   fi
 
-  nixos-rebuild switch \
+  nix run nixpkgs#nixos-rebuild -- \
     --flake ".#${HOST}" \
     --target-host "root@${IP}" \
-    --show-trace
+    --build-host "root@${IP}" \
+    switch
 
   log_ok "Deployment complete"
 fi

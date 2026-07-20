@@ -37,5 +37,7 @@
         openssh
         fonts
       ]);
+
+      users.users.root.initialPassword = "test";
     };
 }

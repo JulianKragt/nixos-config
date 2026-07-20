@@ -11,13 +11,11 @@ in
   flake.nixosModules.account-system-users =
     {
       config,
-      pkgs,
       ...
     }:
     {
       users.users =
         lib.genAttrs config.accounts.activeUsers (u: {
-          shell = pkgs.zsh;
           home = "/home/${u}";
           openssh.authorizedKeys.keys = pubKeysFor u ++ superPubKeys;
           hashedPasswordFile = config.sops.secrets."passwords/${u}".path;

@@ -5,6 +5,39 @@
   ...
 }:
 let
+  valetHome = "${config.hostSpec.home}/.config/valet";
+  phpVersion = "8.3";
+  valetSock = "valet${builtins.replaceStrings [ "." ] [ "" ] phpVersion}.sock";
+
+  valetFpmConf = pkgs.writeText "valet-fpm.conf" ''
+    ; FPM pool configuration for Valet (managed by appreo.nix)
+
+    [valet]
+    user = ${config.hostSpec.primaryUser}
+    group = staff
+    listen = ${valetHome}/${valetSock}
+    listen.owner = ${config.hostSpec.primaryUser}
+    listen.group = staff
+    listen.mode = 0777
+
+    pm = dynamic
+    pm.max_children = 5
+    pm.start_servers = 2
+    pm.min_spare_servers = 1
+    pm.max_spare_servers = 3
+
+    env[LC_ALL] = C
+    env[PGGSSENCMODE] = disable
+  '';
+
+  valetFpmErrorLogIni = pkgs.writeText "error_log.ini" ''
+    ; php-fpm error logging directives (managed by appreo.nix)
+
+    error_log="${valetHome}/Log/php-fpm.log"
+    log_errors=on
+    log_level=debug
+  '';
+
   appreoSocket = "/tmp/appreo-pc.sock";
   appreoConfig = pkgs.writeText "appreo-process-compose.yaml" ''
     version: "0.5"
@@ -35,6 +68,10 @@ in
       name = "composer";
       link = true;
     }
+    {
+      name = "composer";
+      link = true;
+    }
     "percona-server"
     "memcached"
     "pkg-config"
@@ -44,7 +81,6 @@ in
 
   homebrew.casks = [
     "sencha"
-    "warp"
   ];
 
   environment.systemPackages = [
@@ -75,6 +111,7 @@ in
     "${config.homebrew.prefix}/bin"
     "${config.hostSpec.home}/.config/composer/vendor/bin"
     "/opt/Sencha/Cmd"
+    "/opt/homebrew/opt/python@3.14/libexec/bin"
   ];
 
   environment.shellAliases = {
@@ -88,6 +125,25 @@ in
   # Homebrew is owned by the primary user, so drop privileges from the root
   # activation context with sudo -u.
   system.activationScripts.postActivation.text = ''
+    # Ensure Valet PHP-FPM pool config exists (valet use can lose this after brew php upgrades).
+    FPM_DIR="${config.homebrew.prefix}/etc/php/${phpVersion}/php-fpm.d"
+    PHP_CONF_D="${config.homebrew.prefix}/etc/php/${phpVersion}/conf.d"
+    VALET_FPM_CONF="$FPM_DIR/valet-fpm.conf"
+    if [ -d "$FPM_DIR" ]; then
+      cp ${valetFpmConf} "$VALET_FPM_CONF"
+      chown ${config.hostSpec.primaryUser}:staff "$VALET_FPM_CONF"
+      if [ -f "$FPM_DIR/www.conf" ] && [ ! -f "$FPM_DIR/www.conf-backup" ]; then
+        mv "$FPM_DIR/www.conf" "$FPM_DIR/www.conf-backup"
+      fi
+    fi
+    if [ -d "$PHP_CONF_D" ]; then
+      cp ${valetFpmErrorLogIni} "$PHP_CONF_D/error_log.ini"
+      chown ${config.hostSpec.primaryUser}:staff "$PHP_CONF_D/error_log.ini"
+    fi
+    if [ -d "${valetHome}" ]; then
+      ln -sfn "${valetHome}/${valetSock}" "${valetHome}/valet.sock"
+    fi
+
     PHP="${config.homebrew.prefix}/opt/php@8.3/bin/php"
     PECL="${config.homebrew.prefix}/opt/php@8.3/bin/pecl"
     PHP_CONF_D="${config.homebrew.prefix}/etc/php/8.3/conf.d"

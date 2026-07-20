@@ -34,6 +34,7 @@
         unzip
         wget
         yq-go
+        devenv
       ];
     };
 }

@@ -66,9 +66,9 @@ let
             };
 
             nixSecretsPath = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
-              default = null;
-              description = "Path to nix-secrets repo; null uses ../nix-secrets from config root.";
+              type = lib.types.str;
+              default = "../nix-secrets";
+              description = "Path to nix-secrets repo";
             };
 
             sshWaitTimeout = lib.mkOption {

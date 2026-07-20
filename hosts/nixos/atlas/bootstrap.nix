@@ -20,5 +20,6 @@
     enrollSops = true;
     pushSecrets = true;
     deployFullConfig = true;
+    sshWaitTimeout = 500;
   };
 }
