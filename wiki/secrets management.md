@@ -23,9 +23,8 @@ This means the files can be committed to GitHub safely, but only the right keys 
 The secret repo uses a simple layout:
 
 - `.sops.yaml` — defines which keys may decrypt which files
-- `shared.yaml` — secrets shared across hosts
 - `hosts/<host>.yaml` — host-specific secrets
-- `users/<user>.yaml` — user-specific secrets
+- `host-users/<host>-<user>.yaml` — user-specific secrets for one host
 
 There is no top-level `sops/` folder. The encrypted YAML files live directly in the repository.
 
@@ -34,15 +33,14 @@ There is no top-level `sops/` folder. The encrypted YAML files live directly in 
 From the `nixos-config` README:
 
 - The main config repo points to the sibling `nix-secrets` repo.
-- `nixos-config` reads `users/<username>.yaml` for the `hashedPassword` field.
+- `nixos-config` reads `host-users/<host>-<username>.yaml` for the `hashedPassword` field.
 - That value is used as `users.users.<name>.hashedPasswordFile`.
 - This means the login password hash is stored in the secrets repo, not in the config repo.
 
 In practice:
 
-- `shared.yaml` is for things like Wi-Fi, SMTP, or GitHub PATs.
 - `hosts/<host>.yaml` is for secrets only one machine should see.
-- `users/<user>.yaml` is for per-user secret values such as the hashed login password.
+- `host-users/<host>-<user>.yaml` is for per-user secret values such as the hashed login password.
 
 ## How access works
 
@@ -50,8 +48,8 @@ The `.sops.yaml` file defines which age recipients can decrypt each file.
 
 Example from the repo:
 
-- `shared.yaml` can be decrypted by the user key
-- `users/jkragt.yaml` can be decrypted by the user key
+- `host-users/atlas-jkragt.yaml` can be decrypted by the `atlas` host key and the user key
+- `host-users/workhorse-jkragt.yaml` can be decrypted by the `workhorse` host key and the user key
 - `hosts/workhorse.yaml` can be decrypted by the host key for `workhorse`
 - `hosts/atlas.yaml` can be decrypted by the host key for `atlas`
 
@@ -66,13 +64,12 @@ The repositories provide helper commands to make editing easier.
 
 From `nixos-config`:
 
-- `just secrets-edit shared.yaml`
 - `just secrets-edit hosts/<host>.yaml`
-- `just secrets-edit users/<user>.yaml`
+- `just secrets-edit host-users/<host>-<user>.yaml`
 
 From `nix-secrets`:
 
-- `just edit-user <user>`
+- `just edit-host-user <host> <user>`
 - `just edit-host <host>`
 - `just rekey`
 
@@ -109,7 +106,7 @@ A simplified flow looks like this:
 
 ## Example: NixOS login password
 
-The repo README explains that `users/<username>.yaml` contains a `hashedPassword` field.
+The repo README explains that `host-users/<host>-<username>.yaml` contains a `hashedPassword` field.
 
 Important details:
 
