@@ -54,14 +54,18 @@ deprecation note when that system is evaluated ([release notes](https://nixos.or
 
 1. Install nix (with flakes enabled): https://nixos.org/download.html
 2. Install direnv and run `direnv allow` in this directory.
-3. Generate your master age key (kept on every machine that authors secrets):
+3. Create your operator age identity from your Ed25519 SSH private key
+   (same identity used by the sibling `nix-secrets` repo — **not** a standalone
+   `age-keygen` key):
    ```sh
-   mkdir -p ~/.config/sops/age
-   age-keygen -o ~/.config/sops/age/keys.txt
-   age-keygen -y ~/.config/sops/age/keys.txt   # prints the public recipient
+   cd ../nix-secrets
+   nix develop -c just user-identity   # writes ~/.config/sops/age/keys.txt
+   nix develop -c just user-recipient  # prints age1… for .sops.yaml
    ```
-4. Open `../nix-secrets/.sops.yaml`, replace the `&user_jkragt` placeholder
-   with your real age recipient (the `age1...` line above), and commit.
+   Override the SSH key with `NIX_SECRETS_USER_SSH_KEY`, or point SOPS at another
+   identity file with `SOPS_AGE_KEY_FILE`.
+4. Open `../nix-secrets/.sops.yaml`, set `&user_jkragt` to the `just user-recipient`
+   output, and commit.
 5. Adopt or fork the sibling `nix-secrets/` repo. For local development,
    `flake.nix` references it via `path:../nix-secrets`. Once you have a real
    private remote, change the URL to
@@ -110,10 +114,38 @@ users until the full deploy. The install script reads `installSpec` with
 |--------|---------|---------|
 | `generateHardware` | `true` | nixos-anywhere writes `hardware-configuration.nix` |
 | `enrollSops` | `true` | Post-install SOPS enrollment in `../nix-secrets` |
+| `provisionUserAgeKey` | `true` | Stream operator age identity to the target before full deploy |
 | `pushSecrets` | `true` | Push nix-secrets git commits |
 | `deployFullConfig` | `true` | Remote `nixos-rebuild switch` with full flake output |
-| `nixSecretsPath` | `null` | Sibling `../nix-secrets` when null |
+| `nixSecretsPath` | `../nix-secrets` | Path to the nix-secrets repo |
 | `sshWaitTimeout` | `600` | Seconds to wait for SSH after reboot |
+
+#### User age key delivery
+
+`host-users/<hostName>-<primaryUser>.yaml` is encrypted to `&host_<hostName>` and `&user_<primaryUser>`. The install
+script therefore delivers that identity before Phase 8:
+
+1. Reads `SOPS_AGE_KEY_FILE` or `~/.config/sops/age/keys.txt` on the installer.
+2. Checks the public recipient matches `&user_<primaryUser>` in `.sops.yaml`.
+3. Streams the identity over SSH (stdin only) into:
+   - `/var/lib/sops-nix/key.txt` — so host sops-nix can decrypt `neededForUsers` passwords
+   - `/var/lib/sops-nix/pending-user-age-keys/<user>` — staged for Home Manager
+4. On first full activation, `account-secrets` installs the pending file to
+   `~/.config/sops/age/keys.txt` (mode `0600`) and removes the staging copy.
+
+**Security consequence:** every provisioned personal device holds a copy of the
+operator age identity and can decrypt `host-users/<host>-<user>.yaml` (password hash + SSH
+keys). Treat physical access and disk encryption accordingly. A YubiKey-only
+identity is **not** used here because sops-nix decrypts during unattended
+activation.
+
+**Recovery:** if a deploy failed after bootstrap/enrollment, ensure the local age
+identity exists (`just user-identity` in nix-secrets), then:
+
+```
+just deploy-remote HOST IP   # re-provisions the age key if needed, then switch
+just enroll-sops HOST IP     # host recipient only (no user key delivery)
+```
 
 ## Onboarding a new user
 

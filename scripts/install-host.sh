@@ -14,7 +14,7 @@ clear
 
 confirm() {
   local prompt="${1:-Are you sure?}"
-  read -r -p "$prompt [y/N]: "
+  read -r -p "$prompt [y/N]: " reply
   [[ "$reply" =~ ^[Yy]$ ]]
 }
 
@@ -29,22 +29,21 @@ die() { echo -e "\e[31merror: $*\e[0m" >&2; exit 1; }
 log_action() {
   echo -e "\e[33m========================================================================"
   echo -e "$*"
-  echo -e "========================================================================\e[0m";
+  echo -e "========================================================================\e[0m"
 }
 log_info() { echo -e "\e[33m$*\e[0m"; }
 
 log_confirm() {
   echo -e "\e[33m========================================================================"
   echo -e "$1"
-  echo -e "========================================================================\e[0m";
-  if confirm $2; then
-    echo -e "\e[32mProceeding\e[0m";
+  echo -e "========================================================================\e[0m"
+  if confirm "$2"; then
+    echo -e "\e[32mProceeding\e[0m"
   else
-    echo -e "\e[32mCanceling\e[0m";
-    echo -e "\e[32mCanceling\e[0m";
-    exit 1;
+    echo -e "\e[32mCanceling\e[0m"
+    exit 1
   fi
-  }
+}
 
 MODE="full"
 HOST=""
@@ -104,6 +103,7 @@ eval_spec() {
       PRIMARY_USER = x.primaryUser;
       GENERATE_HARDWARE = x.generateHardware;
       ENROLL_SOPS = x.enrollSops;
+      PROVISION_USER_AGE = x.provisionUserAgeKey;
       PUSH_SECRETS = x.pushSecrets;
       DEPLOY_FULL = x.deployFullConfig;
       SSH_TIMEOUT = x.sshWaitTimeout;
@@ -112,7 +112,6 @@ eval_spec() {
       NIX_SECRETS_PATH = x.nixSecretsPath;
     }'
 }
-
 
 CONFIG_JSON="$(eval_spec)"
 
@@ -155,10 +154,10 @@ while true; do
   esac
 done
 
-
 PRIMARY_USER="$(jq -r '.PRIMARY_USER' <<< "$CONFIG_JSON")"
 GENERATE_HARDWARE="$(jq -r '.GENERATE_HARDWARE' <<< "$CONFIG_JSON")"
 ENROLL_SOPS="$(jq -r '.ENROLL_SOPS' <<< "$CONFIG_JSON")"
+PROVISION_USER_AGE="$(jq -r '.PROVISION_USER_AGE' <<< "$CONFIG_JSON")"
 PUSH_SECRETS="$(jq -r '.PUSH_SECRETS' <<< "$CONFIG_JSON")"
 DEPLOY_FULL="$(jq -r '.DEPLOY_FULL' <<< "$CONFIG_JSON")"
 SSH_TIMEOUT="$(jq -r '.SSH_TIMEOUT' <<< "$CONFIG_JSON")"
@@ -167,17 +166,79 @@ HW_REL="$(jq -r '.HW_REL' <<< "$CONFIG_JSON")"
 HW_PATH="hosts/nixos/${HOST}/${HW_REL}"
 NIX_SECRETS_PATH="$(jq -r '.NIX_SECRETS_PATH' <<< "$CONFIG_JSON")"
 
+# Resolve relative nix-secrets path against the config repo.
+if [[ "$NIX_SECRETS_PATH" != /* ]]; then
+  NIX_SECRETS_PATH="$(cd "$CONFIG_PATH" && cd "$NIX_SECRETS_PATH" && pwd)"
+fi
+
 SOPS_YAML="${NIX_SECRETS_PATH}/.sops.yaml"
 ANCHOR="host_${HOST}"
+USER_ANCHOR="user_${PRIMARY_USER}"
+PENDING_AGE_DIR="/var/lib/sops-nix/pending-user-age-keys"
+PENDING_AGE_KEY="${PENDING_AGE_DIR}/${PRIMARY_USER}"
+SYSTEM_AGE_KEY="/var/lib/sops-nix/key.txt"
+USER_AGE_DEST="/home/${PRIMARY_USER}/.config/sops/age/keys.txt"
 
+KNOWN_HOSTS="$(mktemp)"
+cleanup() {
+  rm -f "$KNOWN_HOSTS"
+}
+trap cleanup EXIT
 
-SSH_OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=no)
+# Pre-bootstrap installer may rotate host keys; pin after first boot (Phase 4).
+SSH_OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null)
 
-if grep -q "&${ANCHOR}" "$SOPS_YAML"; then
+pin_target_host_key() {
+  ssh-keygen -R "$IP" 2>/dev/null || true
+  : >"$KNOWN_HOSTS"
+  ssh-keyscan -t ed25519 -T 10 "$IP" >>"$KNOWN_HOSTS" 2>/dev/null \
+    || die "could not pin SSH host key for ${IP}"
+  SSH_OPTS=(
+    -o ConnectTimeout=10
+    -o StrictHostKeyChecking=yes
+    -o UserKnownHostsFile="$KNOWN_HOSTS"
+    -o GlobalKnownHostsFile=/dev/null
+  )
+}
+
+ssh_target() {
+  ssh "${SSH_OPTS[@]}" "root@${IP}" "$@"
+}
+
+# Resolve local operator age identity. Never prints key material.
+resolve_user_age_key() {
+  if [[ -n "${SOPS_AGE_KEY_FILE:-}" ]]; then
+    USER_AGE_KEY_FILE="$SOPS_AGE_KEY_FILE"
+  else
+    USER_AGE_KEY_FILE="${HOME}/.config/sops/age/keys.txt"
+  fi
+
+  [[ -f "$USER_AGE_KEY_FILE" ]] || die "user age key not found at ${USER_AGE_KEY_FILE}.
+Create it from your Ed25519 SSH key in nix-secrets:
+  cd ${NIX_SECRETS_PATH} && nix develop -c just user-identity
+Or set SOPS_AGE_KEY_FILE to an existing age identity file."
+
+  command -v age-keygen >/dev/null || die "age-keygen not in PATH (enter the flake devShell / direnv)"
+
+  grep -q '^AGE-SECRET-KEY-' "$USER_AGE_KEY_FILE" \
+    || die "no AGE-SECRET-KEY in ${USER_AGE_KEY_FILE}"
+
+  USER_AGE_RECIPIENT="$(age-keygen -y "$USER_AGE_KEY_FILE" 2>/dev/null)" \
+    || die "age-keygen -y failed for ${USER_AGE_KEY_FILE}"
+  [[ "$USER_AGE_RECIPIENT" == age1* ]] || die "invalid age recipient from ${USER_AGE_KEY_FILE}"
+
+  [[ -f "$SOPS_YAML" ]] || die "missing ${SOPS_YAML}"
+  expected="$(grep "&${USER_ANCHOR}" "$SOPS_YAML" | sed -E 's/.*&'"${USER_ANCHOR}"'[[:space:]]+(age1[^[:space:]]+).*/\1/' | head -1)"
+  [[ -n "$expected" ]] || die "anchor &${USER_ANCHOR} not found in ${SOPS_YAML}"
+  [[ "$expected" == "$USER_AGE_RECIPIENT" ]] \
+    || die "local age recipient (${USER_AGE_RECIPIENT}) does not match &${USER_ANCHOR} (${expected}) in ${SOPS_YAML}"
+}
+
+if [[ -f "$SOPS_YAML" ]] && grep -q "&${ANCHOR}" "$SOPS_YAML"; then
   log_action "\e[31m
   error: There is an SOPS age key set for this host in .sops.yaml
   Adviced to delete.
-  \e[0m \e[33" 
+  \e[0m \e[33"
 
   read -r -p $'\e[33m Auto delete/Edit/Ignore?\e[0m [d=delete/e=edit/i=ignore]: ' reply
 
@@ -188,7 +249,10 @@ if grep -q "&${ANCHOR}" "$SOPS_YAML"; then
 
     [Dd])
       rm -f "${NIX_SECRETS_PATH}/hosts/${HOST}.yaml"
-      sed -i "\|&${ANCHOR}|d" "$SOPS_YAML"
+      # portable in-place delete (GNU/BSD sed differ on -i)
+      tmp="$(mktemp)"
+      grep -v "&${ANCHOR}" "$SOPS_YAML" >"$tmp"
+      mv "$tmp" "$SOPS_YAML"
       ;;
     [Ii])
       log_ok "ignored"
@@ -206,15 +270,12 @@ log_action "There are a few setup commands that need to be run manually:
     For setting up a temporary root password
     This is needed to be able to SSH into the new device."
 
-ssh_target() {
-  ssh "${SSH_OPTS[@]}" "root@${IP}" "$@"
-}
-
 # --- resolve mode overrides ---
 RUN_PREFLIGHT=1
 RUN_INSTALL=0
 RUN_WAIT=0
 RUN_SOPS=0
+RUN_PROVISION_AGE=0
 RUN_DEPLOY=0
 RUN_VALIDATE=0
 
@@ -223,6 +284,7 @@ case "$MODE" in
     RUN_INSTALL=1
     RUN_WAIT=1
     RUN_SOPS=1
+    RUN_PROVISION_AGE=1
     RUN_DEPLOY=1
     RUN_VALIDATE=1
     ;;
@@ -233,6 +295,8 @@ case "$MODE" in
     ;;
   deploy-remote)
     RUN_PREFLIGHT=0
+    RUN_WAIT=1
+    RUN_PROVISION_AGE=1
     RUN_DEPLOY=1
     RUN_VALIDATE=1
     ;;
@@ -240,6 +304,9 @@ esac
 
 nix_eval_bool "$ENROLL_SOPS" || RUN_SOPS=0
 nix_eval_bool "$DEPLOY_FULL" || RUN_DEPLOY=0
+nix_eval_bool "$PROVISION_USER_AGE" || RUN_PROVISION_AGE=0
+# User age key is only needed when a full deploy will run.
+[[ "$RUN_DEPLOY" == "1" ]] || RUN_PROVISION_AGE=0
 
 # --- Phase 1-2: preflight ---
 if [[ "$RUN_PREFLIGHT" == "1" ]]; then
@@ -251,8 +318,13 @@ if [[ "$RUN_PREFLIGHT" == "1" ]]; then
   DEVICE="$(nix_eval_raw "${CFG}.disko.devices.disk.main.device")"
   [[ "$DEVICE" != *REPLACE_ME* ]] || die "disko device not configured for $HOST (contains REPLACE_ME)"
 
-  if [[ ! -f "${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml" ]]; then
-    echo "warn: ${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml missing — full deploy may fail"
+  if [[ ! -f "${NIX_SECRETS_PATH}/host-users/${HOST}-${PRIMARY_USER}.yaml" ]]; then
+    echo "warn: ${NIX_SECRETS_PATH}/host-users/${HOST}-${PRIMARY_USER}.yaml missing — full deploy may fail"
+  fi
+
+  if [[ "$RUN_PROVISION_AGE" == "1" ]]; then
+    resolve_user_age_key
+    log_ok "User age identity matches &${USER_ANCHOR}"
   fi
 
   ssh-keygen -R "$IP" 2>/dev/null || true
@@ -282,27 +354,27 @@ if [[ "$RUN_PREFLIGHT" == "1" ]]; then
   [[ "$CONFIRM" == "install" ]] || die "aborted by user"
   log_ok "User confirmed"
 
-if [[ -z "${DISKO_PASSWORD:-}" ]]; then
-  while true; do
-    read -rsp "LUKS passphrase for ${HOST}: " p1
-    echo
-    read -rsp "Confirm LUKS passphrase for ${HOST}: " p2
-    echo
+  if [[ -z "${DISKO_PASSWORD:-}" ]]; then
+    while true; do
+      read -rsp "LUKS passphrase for ${HOST}: " p1
+      echo
+      read -rsp "Confirm LUKS passphrase for ${HOST}: " p2
+      echo
 
-    if [[ -z "$p1" ]]; then
-      echo "Password cannot be empty"
-      continue
-    fi
+      if [[ -z "$p1" ]]; then
+        echo "Password cannot be empty"
+        continue
+      fi
 
-    if [[ "$p1" != "$p2" ]]; then
-      echo "Passwords do not match, try again"
-      continue
-    fi
+      if [[ "$p1" != "$p2" ]]; then
+        echo "Passwords do not match, try again"
+        continue
+      fi
 
-    DISKO_PASSWORD="$p1"
-    break
-  done
-fi
+      DISKO_PASSWORD="$p1"
+      break
+    done
+  fi
   printf '%s' "$DISKO_PASSWORD" | ssh "${SSH_OPTS[@]}" "root@${IP}" "cat > '${LUKS_FILE}' && chmod 600 '${LUKS_FILE}'"
 fi
 
@@ -353,13 +425,16 @@ if [[ "$RUN_WAIT" == "1" ]]; then
   log_step "Waiting for first boot"
 
   ssh-keygen -R "$IP" 2>/dev/null || true
+  # Allow TOFU while polling; pin after the first successful login.
+  SSH_OPTS=(-o ConnectTimeout=10 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o GlobalKnownHostsFile=/dev/null)
 
   deadline=$((SECONDS + SSH_TIMEOUT))
   until ssh "${SSH_OPTS[@]}" "root@${IP}" 'echo ok' 2>/dev/null; do
     [[ "$SECONDS" -lt "$deadline" ]] || die "SSH timeout after ${SSH_TIMEOUT}s"
     sleep 5
   done
-  log_ok "First boot detected"
+  pin_target_host_key
+  log_ok "First boot detected (SSH host key pinned)"
 fi
 
 # --- Phase 5-7: SOPS enrollment ---
@@ -427,7 +502,7 @@ YAML
   fi
 
   if [[ "$NEED_UPDATEKEYS" == "1" ]]; then
-    (cd "$NIX_SECRETS_PATH" && sops updatekeys -y "hosts/${HOST}.yaml" "shared.yaml")
+    (cd "$NIX_SECRETS_PATH" && sops updatekeys -y "hosts/${HOST}.yaml" "host-users/${HOST}-${PRIMARY_USER}.yaml")
     log_ok "Secrets updated"
   fi
 
@@ -450,12 +525,67 @@ YAML
   fi
 fi
 
+# --- Phase 7.5: provision user age identity ---
+if [[ "$RUN_PROVISION_AGE" == "1" ]]; then
+  log_step "Provisioning user age identity"
+
+  resolve_user_age_key
+
+  # Pin if we skipped Phase 4 (should not happen for deploy-remote — WAIT runs).
+  if [[ ! -s "$KNOWN_HOSTS" ]]; then
+    pin_target_host_key
+  fi
+
+  already=0
+  if ssh_target "test -f '${USER_AGE_DEST}' && test -f '${SYSTEM_AGE_KEY}'"; then
+    remote_recip="$(ssh_target "age-keygen -y '${USER_AGE_DEST}' 2>/dev/null" || true)"
+    if [[ "$remote_recip" == "$USER_AGE_RECIPIENT" ]]; then
+      if ssh_target "grep -qF '${USER_AGE_RECIPIENT}' '${SYSTEM_AGE_KEY}'"; then
+        already=1
+      fi
+    fi
+  fi
+
+  if [[ "$already" == "1" ]]; then
+    log_ok "User age identity already present on target"
+  else
+    # Stream identity over stdin; never put key material in argv or shell history.
+    # Stages a root-only pending file and merges into the system sops keyfile.
+    # Activation (account-secrets) copies pending → ~/.config/sops/age/keys.txt.
+    ssh_target "mkdir -p '${PENDING_AGE_DIR}' /var/lib/sops-nix && chmod 700 /var/lib/sops-nix '${PENDING_AGE_DIR}'" \
+      || die "failed to create sops key directories on target"
+
+    # shellcheck disable=SC2029
+    cat "$USER_AGE_KEY_FILE" | ssh "${SSH_OPTS[@]}" "root@${IP}" \
+      "umask 077; cat > '${PENDING_AGE_KEY}' && chmod 600 '${PENDING_AGE_KEY}'" \
+      || die "failed to stage user age key on target"
+
+    ssh_target "
+      set -euo pipefail
+      umask 077
+      mkdir -p /var/lib/sops-nix
+      touch '${SYSTEM_AGE_KEY}'
+      chmod 600 '${SYSTEM_AGE_KEY}'
+      # Annotate with public recipient for idempotent checks (age ignores # comments).
+      if ! grep -qF '${USER_AGE_RECIPIENT}' '${SYSTEM_AGE_KEY}' 2>/dev/null; then
+        {
+          echo \"# public key: ${USER_AGE_RECIPIENT}\"
+          grep '^AGE-SECRET-KEY-' '${PENDING_AGE_KEY}' || cat '${PENDING_AGE_KEY}'
+        } >> '${SYSTEM_AGE_KEY}'
+      fi
+      chmod 600 '${SYSTEM_AGE_KEY}' '${PENDING_AGE_KEY}'
+    " || die "failed to merge user age identity into ${SYSTEM_AGE_KEY}"
+
+    log_ok "User age identity staged (system keyfile + pending for HM)"
+  fi
+fi
+
 # --- Phase 8: full deploy ---
 if [[ "$RUN_DEPLOY" == "1" ]]; then
   log_step "Deploying full configuration"
 
-  if [[ ! -f "${NIX_SECRETS_PATH}/users/${PRIMARY_USER}.yaml" ]]; then
-    echo "warn: users/${PRIMARY_USER}.yaml missing in nix-secrets — deploy will likely fail"
+  if [[ ! -f "${NIX_SECRETS_PATH}/host-users/${HOST}-${PRIMARY_USER}.yaml" ]]; then
+    echo "warn: host-users/${HOST}-${PRIMARY_USER}.yaml missing in nix-secrets — deploy will likely fail"
   fi
 
   nix run nixpkgs#nixos-rebuild -- \
@@ -471,14 +601,32 @@ fi
 if [[ "$RUN_VALIDATE" == "1" ]]; then
   log_step "Validation"
 
-  ssh_target '
+  ssh_target "
     set -euo pipefail
-    echo "Failed units:"
+    echo \"Failed units:\"
     systemctl --failed --no-legend || true
     systemctl is-active sops-nix
-    test -f /var/lib/sops-nix/key.txt
-    echo "nixos-version: $(nixos-version)"
-  '
+    test -f '${SYSTEM_AGE_KEY}'
+    test -f '${USER_AGE_DEST}'
+    mode=\$(stat -c '%a' '${USER_AGE_DEST}' 2>/dev/null || stat -f '%Lp' '${USER_AGE_DEST}')
+    owner=\$(stat -c '%U' '${USER_AGE_DEST}' 2>/dev/null || stat -f '%Su' '${USER_AGE_DEST}')
+    test \"\$mode\" = '600'
+    test \"\$owner\" = '${PRIMARY_USER}'
+    # neededForUsers password secret must exist after activation
+    test -r /run/secrets-for-users/passwords/${PRIMARY_USER} \
+      || test -r /run/secrets/passwords/${PRIMARY_USER}
+    # Home Manager SSH secret rendered from host-users/*.yaml
+    test -f /home/${PRIMARY_USER}/.ssh/id_ed25519
+    ssh_mode=\$(stat -c '%a' /home/${PRIMARY_USER}/.ssh/id_ed25519 2>/dev/null || stat -f '%Lp' /home/${PRIMARY_USER}/.ssh/id_ed25519)
+    test \"\$ssh_mode\" = '600'
+    # Pending staging file should be consumed by activation
+    ! test -f '${PENDING_AGE_KEY}'
+    if systemctl is-failed home-manager-${PRIMARY_USER}.service >/dev/null 2>&1; then
+      echo \"home-manager-${PRIMARY_USER}.service is failed\" >&2
+      exit 1
+    fi
+    echo \"nixos-version: \$(nixos-version)\"
+  "
 
   log_ok "Validation complete"
 fi

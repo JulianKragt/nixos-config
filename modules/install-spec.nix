@@ -53,6 +53,18 @@ let
               description = "Enroll host SSH key in nix-secrets after first boot.";
             };
 
+            provisionUserAgeKey = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = ''
+                Before the full deploy, stream the operator age identity
+                (SOPS_AGE_KEY_FILE or ~/.config/sops/age/keys.txt) to the target
+                so sops-nix can decrypt host-users/<hostName>-<primaryUser>.yaml for passwords
+                and Home Manager secrets. Requires the identity to match
+                &user_<primaryUser> in nix-secrets/.sops.yaml.
+              '';
+            };
+
             pushSecrets = lib.mkOption {
               type = lib.types.bool;
               default = true;
