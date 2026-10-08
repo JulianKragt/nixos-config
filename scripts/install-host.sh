@@ -615,10 +615,6 @@ if [[ "$RUN_VALIDATE" == "1" ]]; then
     # neededForUsers password secret must exist after activation
     test -r /run/secrets-for-users/passwords/${PRIMARY_USER} \
       || test -r /run/secrets/passwords/${PRIMARY_USER}
-    # Home Manager SSH secret rendered from host-users/*.yaml
-    test -f /home/${PRIMARY_USER}/.ssh/id_ed25519
-    ssh_mode=\$(stat -c '%a' /home/${PRIMARY_USER}/.ssh/id_ed25519 2>/dev/null || stat -f '%Lp' /home/${PRIMARY_USER}/.ssh/id_ed25519)
-    test \"\$ssh_mode\" = '600'
     # Pending staging file should be consumed by activation
     ! test -f '${PENDING_AGE_KEY}'
     if systemctl is-failed home-manager-${PRIMARY_USER}.service >/dev/null 2>&1; then

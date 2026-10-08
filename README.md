@@ -134,8 +134,7 @@ script therefore delivers that identity before Phase 8:
    `~/.config/sops/age/keys.txt` (mode `0600`) and removes the staging copy.
 
 **Security consequence:** every provisioned personal device holds a copy of the
-operator age identity and can decrypt `host-users/<host>-<user>.yaml` (password hash + SSH
-keys). Treat physical access and disk encryption accordingly. A YubiKey-only
+operator age identity and can decrypt `host-users/<host>-<user>.yaml` (password hash). Treat physical access and disk encryption accordingly. A YubiKey-only
 identity is **not** used here because sops-nix decrypts during unattended
 activation.
 
