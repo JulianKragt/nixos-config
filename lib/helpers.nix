@@ -41,6 +41,14 @@ rec {
       )
     );
 
+  # A user lives on a host iff home/<user>/<host>.nix exists.
+  usersForHost =
+    host:
+    builtins.readDir (relativeToRoot "home")
+    |> lib.filterAttrs (n: t: t == "directory" && n != "common")
+    |> builtins.attrNames
+    |> lib.filter (u: builtins.pathExists (relativeToRoot "home/${u}/${host}.nix"));
+
   genPubKeyList =
     dir:
     if builtins.pathExists dir then

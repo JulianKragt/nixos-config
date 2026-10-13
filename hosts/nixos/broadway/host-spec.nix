@@ -1,5 +1,5 @@
 {
-  flake.nixosModules.host-broadway =
+  flake.nixosModules.host-broadway-spec =
     { ... }:
     {
       hostSpec = {

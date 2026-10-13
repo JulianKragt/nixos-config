@@ -32,7 +32,7 @@ It validates that:
 Then it builds references into your flake outputs:
 
 - `#nixosConfigurations.<host>-bootstrap.config`
-- `...installSpec` (read from the host bootstrap config)
+- `...provisionSpec` (read from the host bootstrap config)
 
 So install behavior is driven by host-specific Nix config, not hardcoded shell logic.
 
@@ -47,7 +47,7 @@ So install behavior is driven by host-specific Nix config, not hardcoded shell l
    - checks bootstrap module exists for the host
    - prepares flake attribute paths used by `nix eval`
 
-3. **Read install policy from Nix (`installSpec`)**
+3. **Read install policy from Nix (`provisionSpec`)**
    - the script evaluates values from the host’s bootstrap install spec
    - this defines how installation should be performed
 
@@ -108,7 +108,7 @@ bash scripts/install-host.sh <host> <ip> --deploy-remote
 ## Preconditions
 
 - host exists at `hosts/nixos/<host>/`
-- `hosts/nixos/<host>/bootstrap.nix` defines expected `installSpec`
+- `hosts/nixos/<host>/bootstrap.nix` defines expected `provisionSpec`
 - machine reachable over network/SSH at `<ip>`
 - required local tooling available (`nix`, and whatever bootstrap path requires)
 - if encrypted disks are used, provide `DISKO_PASSWORD` or be ready to enter it interactively
@@ -119,7 +119,7 @@ bash scripts/install-host.sh <host> <ip> --deploy-remote
   - verify host directory and `bootstrap.nix` path
 - **Nix eval failures**
   - confirm flake output naming matches `<host>-bootstrap`
-  - validate `installSpec` exists and is well-formed
+  - validate `provisionSpec` exists and is well-formed
 - **Install reaches disk encryption prompt**
   - set/export `DISKO_PASSWORD` before running, or enter manually
 - **Secrets unavailable after install**

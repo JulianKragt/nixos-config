@@ -2,7 +2,7 @@
 {
   imports = [
     ./modules/host-spec.nix
-    ./modules/install-spec.nix
+    ./modules/bootstrap-base.nix
 
     ./home/common/core/baseline.nix
     ./home/common/core/darwin.nix

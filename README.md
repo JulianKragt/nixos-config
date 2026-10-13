@@ -20,7 +20,7 @@ config/
 │   └── helpers.nix    # helper functions (`inputs`, `lib`)
 ├── modules/           # custom modules: each declares options + (optionally) implementation
 │   ├── host-spec.nix
-│   └── install-spec.nix
+│   └── bootstrap-base.nix
 ├── hosts/
 │   ├── common/{core,optional,users}/
 │   ├── nixos/<host>/
@@ -92,8 +92,7 @@ Secrets editing and re-keying live in the sibling `../nix-secrets` repo (`just e
 See §6 of the architecture plan. Short version:
 
 1. Create `hosts/<platform>/<host>/{default,host-spec}.nix` (and for NixOS:
-   `disko.nix`, stub `hardware-configuration.nix`, and `bootstrap.nix` with
-   `installSpec`).
+   `disko.nix`, stub `hardware-configuration.nix`, and `bootstrap.nix`).
 2. Add the host’s flake fragments to [`imports.nix`](imports.nix) if you add new `.nix` files under `hosts/` or `home/` that export flake modules.
 3. For each user that should live on the host, create `home/<user>/<host>.nix`
    exporting `flake.homeModules.<user>-<host>`. Existence is the activation
@@ -101,24 +100,17 @@ See §6 of the architecture plan. Short version:
 4. NixOS: set the real disk device in `disko.nix`, then `just install <host> <ip>`.
    Darwin: `just rebuild <host>`.
 
-### NixOS install (`installSpec`)
+### NixOS install (bootstrap)
 
-Install policy is declared in `hosts/nixos/<host>/bootstrap.nix` via
-[`modules/install-spec.nix`](modules/install-spec.nix) (`installSpec` options).
-Bootstrap is intentionally minimal: disko, openssh, systemd-boot, and **root**
-SSH access (keys from `primaryUser` + super). No Home Manager, SOPS, or normal
-users until the full deploy. The install script reads `installSpec` with
-`nix eval`. LUKS passphrase is prompted at install time (or `DISKO_PASSWORD`).
-
-| Option | Default | Meaning |
-|--------|---------|---------|
-| `generateHardware` | `true` | nixos-anywhere writes `hardware-configuration.nix` |
-| `enrollSops` | `true` | Post-install SOPS enrollment in `../nix-secrets` |
-| `provisionUserAgeKey` | `true` | Stream operator age identity to the target before full deploy |
-| `pushSecrets` | `true` | Push nix-secrets git commits |
-| `deployFullConfig` | `true` | Remote `nixos-rebuild switch` with full flake output |
-| `nixSecretsPath` | `../nix-secrets` | Path to the nix-secrets repo |
-| `sshWaitTimeout` | `600` | Seconds to wait for SSH after reboot |
+Each NixOS host has a `<host>-bootstrap` configuration
+(`hosts/nixos/<host>/bootstrap.nix`) built from
+[`modules/bootstrap-base.nix`](modules/bootstrap-base.nix) and the host's
+`hostSpec`. Bootstrap is intentionally minimal: disko, openssh, systemd-boot,
+and **root** SSH access (keys from `primaryUser` + super). No Home Manager,
+SOPS, or normal users until the full deploy. The installer discovers hosts with
+`nix eval --json .#installHosts`. Install behaviour (hardware generation, SOPS
+enrollment, full deploy, timeouts) is controlled by installer flags, not Nix.
+LUKS passphrase is prompted at install time (or `DISKO_PASSWORD`).
 
 #### User age key delivery
 

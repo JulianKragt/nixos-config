@@ -44,12 +44,6 @@ let
               description = "High-level host role; gates a few feature defaults.";
             };
 
-            persistFolder = lib.mkOption {
-              type = lib.types.nullOr lib.types.str;
-              default = null;
-              description = "If impermanence is enabled, the persisted root (e.g. /persist).";
-            };
-
             timeZone = lib.mkOption {
               type = lib.types.str;
               default = "Europe/Amsterdam";
@@ -61,12 +55,6 @@ let
               default = "25.11";
               description = "system.stateVersion / home.stateVersion baseline.";
             };
-
-            useYubikey = lib.mkOption {
-              type = lib.types.bool;
-              default = false;
-              description = "Indicate this host uses a YubiKey (gates feature wiring).";
-            };
           };
         };
       };
@@ -77,7 +65,8 @@ let
             ../home + "/${config.hostSpec.primaryUser}/${config.hostSpec.hostName}.nix"
           );
           message = ''
-            hostSpec.primaryUser = "${config.hostSpec.primaryUser}" 
+            hostSpec.primaryUser = "${config.hostSpec.primaryUser}" has no home module for host "${config.hostSpec.hostName}".
+            Create home/${config.hostSpec.primaryUser}/${config.hostSpec.hostName}.nix, e.g.:
 
               { self, ... }:
               {

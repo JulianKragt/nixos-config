@@ -31,6 +31,7 @@
       ]
       ++ (with self.nixosModules; [
         host-spec
+        host-broadway-spec
         core
         host-common
         usersDispatch

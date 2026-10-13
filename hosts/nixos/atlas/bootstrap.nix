@@ -5,21 +5,11 @@
 }:
 {
   imports = [
-    self.nixosModules.install-spec
+    self.nixosModules.bootstrap-base
+    self.nixosModules.host-atlas-spec
     self.nixosModules.openssh
     ./disko.nix
     inputs.disko.nixosModules.disko
     ./hardware-configuration.nix
   ];
-
-  installSpec = {
-    hostName = "atlas";
-    primaryUser = "jkragt";
-    timeZone = "Europe/Amsterdam";
-    generateHardware = true;
-    enrollSops = true;
-    pushSecrets = true;
-    deployFullConfig = true;
-    sshWaitTimeout = 500;
-  };
 }

@@ -31,6 +31,7 @@
       ]
       ++ (with self.nixosModules; [
         host-spec
+        host-atlas-spec
         core
         host-common
         usersDispatch

@@ -6,7 +6,7 @@
 #   scripts/install-host.sh <host> <ip> --enroll-sops
 #   scripts/install-host.sh <host> <ip> --deploy-remote
 #
-# Install policy is read from hosts/nixos/<host>/bootstrap.nix (installSpec module).
+# Install policy is read from hosts/nixos/<host>/bootstrap.nix (provisionSpec module).
 # LUKS passphrase: set DISKO_PASSWORD or enter at prompt (never stored in Nix).
 set -euo pipefail
 
@@ -87,7 +87,7 @@ BOOTSTRAP="hosts/nixos/${HOST}/bootstrap.nix"
 }
 
 CFG="#nixosConfigurations.${HOST}-bootstrap.config"
-SPEC="${CFG}.installSpec"
+SPEC="${CFG}.provisionSpec"
 
 nix_eval_raw() {
   nix eval --raw "$1"

@@ -20,7 +20,7 @@
             key = "hashedPassword";
             neededForUsers = true;
           };
-        }) config.accounts.activeUsers
+        }) (lib.filter (u: config.accounts.users.${u}.secrets) config.accounts.activeUsers)
       );
 
       # Runs during nixos-rebuild activationScripts (before HM systemd units).

@@ -23,11 +23,8 @@ let
         |> builtins.attrNames
         |> (lib.filter (n: n != "common"));
 
-      # A user lives on THIS host iff home/<u>/<hostName>.nix exists.
       # Evaluated lazily in `config`; safe to depend on `config.hostSpec`.
-      activeUsers =
-        userDirs
-        |> (lib.filter (u: builtins.pathExists (../../../home + "/${u}/${config.hostSpec.hostName}.nix")));
+      activeUsers = self.lib.custom.usersForHost config.hostSpec.hostName;
 
       flakeModuleIfExists =
         name: if self.${systemModulesAttr} ? ${name} then [ self.${systemModulesAttr}.${name} ] else [ ];
@@ -52,7 +49,25 @@ let
         description = "Users active on this host (set by the dispatcher; read by sibling account-* modules).";
       };
 
+      options.accounts.users = lib.mkOption {
+        description = ''
+          Per-user policy. Keys are the active users (home/<u>/<hostName>.nix
+          exists); set an entry only to override a default.
+        '';
+        default = { };
+        type = lib.types.attrsOf (
+          lib.types.submodule {
+            options.secrets = lib.mkOption {
+              type = lib.types.bool;
+              default = true;
+              description = "Password comes from host-users/<hostName>-<user>.yaml; false leaves the account without a password.";
+            };
+          }
+        );
+      };
+
       config.accounts.activeUsers = activeUsers;
+      config.accounts.users = lib.genAttrs activeUsers (_: { });
     };
 in
 {

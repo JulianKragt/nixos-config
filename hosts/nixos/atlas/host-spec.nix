@@ -1,5 +1,5 @@
 {
-  flake.nixosModules.host-atlas =
+  flake.nixosModules.host-atlas-spec =
     { ... }:
     {
       hostSpec = {
