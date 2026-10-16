@@ -1,22 +1,6 @@
 {
   flake.homeModules.firefox =
     { inputs, pkgs, hostSpec, ... }:
-    let
-      inherit (inputs.firefox-addons.lib.${pkgs.stdenv.hostPlatform.system}) buildFirefoxXpiAddon;
-      hideShorts = buildFirefoxXpiAddon rec {
-        pname = "hide-youtube-shorts";
-        version = "1.11.0";
-        addonId = "{88ebde3a-4581-4c6b-8019-2a05a9e3e938}";
-        url = "https://addons.mozilla.org/firefox/downloads/latest/hide-youtube-shorts/addon.xpi";
-        sha256 = "0r9pwvr7hnl9sig83y84gl155a5cgad1nr1m81sv6n740jfkwi0c";
-        meta = with pkgs.lib; {
-          description = "Hide YouTube Shorts";
-          homepage = "https://addons.mozilla.org/en-US/firefox/addon/hide-youtube-shorts/";
-          license = licenses.mit;
-          platforms = platforms.all;
-        };
-      };
-    in
     {
       programs.firefox = {
         enable = true;
@@ -30,7 +14,7 @@
               bitwarden
               ublock-origin
               sponsorblock
-              hideShorts
+              youtube-shorts-block
             ];
             settings = {
               "browser.newtabpage.activity-stream.showSponsoredTopSites" = false;
@@ -85,7 +69,7 @@
               bitwarden
               ublock-origin
               sponsorblock
-              hideShorts
+              youtube-shorts-block
             ];
             settings = {
               "browser.newtabpage.activity-stream.showSponsoredTopSites" = false;

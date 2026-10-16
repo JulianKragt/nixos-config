@@ -19,9 +19,11 @@
     ./home/common/optional/apps/keepassxc.nix
     ./home/common/optional/apps/nixvim.nix
     ./home/common/optional/apps/phpstorm.nix
+    ./home/common/optional/apps/goland.nix
     ./home/common/optional/apps/slack.nix
     ./home/common/optional/apps/obsidian.nix
     ./home/common/optional/apps/spotify.nix
+    ./home/common/optional/apps/sunsama.nix
     ./home/common/optional/shell/zsh.nix
     ./home/common/optional/shell/starship.nix
 
@@ -53,6 +55,8 @@
     ./hosts/common/optional/openssh.nix
     ./hosts/common/optional/nix-homebrew.nix
     ./hosts/common/optional/onedrive.nix
+    ./hosts/common/optional/claude-desktop.nix
+    ./hosts/common/optional/sunsama.nix
 
     ./hosts/common/accounts/default.nix
     ./hosts/common/accounts/system-users.nix

@@ -16,6 +16,7 @@
           phpstorm
           slack
           spotify
+          sunsama
           obsidian
           desktop-aerospace
           docker

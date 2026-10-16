@@ -24,6 +24,8 @@
         ./mac-settings.nix
         ./projects/appreo.nix
         onedrive
+        claude-desktop
+        sunsama
         usersDispatch
       ];
 
