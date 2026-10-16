@@ -4,13 +4,13 @@
   flake.homeModules.desktop-aerospace =
     { lib, pkgs, ... }:
     {
-      home.packages = lib.mkIf pkgs.stdenv.isDarwin [
+      home.packages = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin [
         # Aerospace is in nixpkgs as `aerospace` on darwin systems.
         pkgs.aerospace
       ];
 
       # Drop a minimal config; the user can override fully in their per-(user,host) module.
-      home.file.".config/aerospace/aerospace.toml" = lib.mkIf pkgs.stdenv.isDarwin {
+      home.file.".config/aerospace/aerospace.toml" = lib.mkIf pkgs.stdenv.hostPlatform.isDarwin {
         text = ''
           start-at-login = true
           enable-normalization-flatten-containers = true

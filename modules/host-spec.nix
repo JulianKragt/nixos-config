@@ -31,7 +31,7 @@ let
                 let
                   u = config.hostSpec.primaryUser;
                 in
-                if pkgs.stdenv.isDarwin then "/Users/${u}" else "/home/${u}";
+                if pkgs.stdenv.hostPlatform.isDarwin then "/Users/${u}" else "/home/${u}";
             };
 
             role = lib.mkOption {

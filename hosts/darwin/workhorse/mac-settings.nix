@@ -19,7 +19,9 @@
       wvous-tr-corner = 2;
 
       persistent-apps = [
-        { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Firefox.app"; }
+        # Point at the Nix store bundle: the wrapped Firefox execs from there, so the
+        # "Home Manager Apps" copy launches a mismatched bundle and reports "already open".
+        { app = "${config.home-manager.users.${config.system.primaryUser}.programs.firefox.finalPackage}/Applications/Firefox.app"; }
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Slack.app"; }
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/Spotify.app"; }
         { app = "/Users/${config.system.primaryUser}/Applications/Home Manager Apps/PhpStorm.app"; }
